@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from OpticalRS import *
+from RasterDS import *
+import Lyzenga1981
 
 __author__ = 'Jared Kibele'
 __email__ = 'jkibele@gmail.com'
