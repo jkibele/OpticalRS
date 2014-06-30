@@ -38,7 +38,10 @@ class RasterDS(object):
         # open the image
         img = gdal.Open(self.file_path, GA_ReadOnly)
         if img is None:
-            print 'Could not open %s. This file does not seem to be one that gdal can open.' % self.file_path
+            if os.path.exists(self.file_path):
+                print 'Could not open %s. This file does not seem to be one that gdal can open.' % self.file_path
+            else:
+                print 'Could not open %s. It seems that this file does not exist.' % self.file_path
             return None
         else:
             return img
@@ -87,3 +90,50 @@ class RasterDS(object):
         """
         barr = self.gdal_ds.ReadAsArray()
         return barr.T.swapaxes(0,1)
+        
+    def new_image_from_array(self,bandarr,outfilename=None,dtype=GDT_Float32,no_data_value=-99):
+        """
+        Save an image like self from a band array.
+        """
+        bandarr = np.rollaxis(bandarr,2,0)
+        if not outfilename:
+            outfilename = self.output_file_path()
+        output_gtif_like_img(self.gdal_ds, bandarr, outfilename, no_data_value=no_data_value, dtype=dtype)
+        return RasterDS(outfilename)
+        
+def output_gtif(bandarr, cols, rows, outfilename, geotransform, projection, no_data_value=-99, driver_name='GTiff', dtype=GDT_Float32):
+    """Create a geotiff with gdal that will contain all the bands represented
+    by arrays within bandarr which is itself array of arrays. Expecting bandarr
+    to be of shape (Bands,Rows,Columns)"""
+    # make sure bandarr is a proper band array
+    if bandarr.ndim==2:
+        bandarr = np.array([ bandarr ])
+    driver = gdal.GetDriverByName(driver_name)
+    # The compress and predictor options below just reduced a geotiff
+    # from 216MB to 87MB. Predictor 2 is horizontal differencing.
+    outDs = driver.Create(outfilename, cols, rows, len(bandarr), dtype,  options=[ 'COMPRESS=LZW','PREDICTOR=2' ])
+    if outDs is None:
+        print "Could not create %s" % outfilename
+        sys.exit(1)
+    for bandnum in range(1,len(bandarr) + 1):  # bandarr is zero based index while GetRasterBand is 1 based index
+        outBand = outDs.GetRasterBand(bandnum)
+        outBand.WriteArray(bandarr[bandnum - 1])
+        outBand.FlushCache()
+        outBand.SetNoDataValue(no_data_value)
+        
+    # georeference the image and set the projection
+    outDs.SetGeoTransform(geotransform)
+    outDs.SetProjection(projection)
+
+    # build pyramids
+    gdal.SetConfigOption('HFA_USE_RRD', 'YES')
+    outDs.BuildOverviews(overviewlist=[2,4,8,16,32,64,128])
+    
+def output_gtif_like_img(img, bandarr, outfilename, no_data_value=-99, dtype=GDT_Float32):
+    """Create a geotiff with attributes like the one passed in but make the
+    values and number of bands as in bandarr."""
+    cols = img.RasterXSize
+    rows = img.RasterYSize
+    geotransform = img.GetGeoTransform()
+    projection = img.GetProjection()
+    output_gtif(bandarr, cols, rows, outfilename, geotransform, projection, no_data_value, driver_name='GTiff', dtype=dtype)
