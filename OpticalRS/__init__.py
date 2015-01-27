@@ -4,6 +4,8 @@ from RasterDS import *
 import Lyzenga1981
 import Sagawa2010
 import LandMasking
+import MSExposure
+import MSDisplay
 
 __author__ = 'Jared Kibele'
 __email__ = 'jkibele@gmail.com'

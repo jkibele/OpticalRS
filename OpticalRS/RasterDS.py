@@ -87,9 +87,27 @@ class RasterDS(object):
     def band_array(self):
         """
         Return the image data in a numpy array of shape (Rows, Columns, Bands).
+        If the image has a "no data value" return a masked array.
         """
         barr = self.gdal_ds.ReadAsArray()
-        return barr.T.swapaxes(0,1)
+        #ourarr = barr.T.swapaxes(0,1)
+        blist = []
+        bmlist = []
+        for b in range( self.gdal_ds.RasterCount ):
+            b += 1 #Bands are 1 based indexed
+            band = self.gdal_ds.GetRasterBand( b )
+            barr = band.ReadAsArray()
+            blist.append( barr )
+            nodat = band.GetNoDataValue()
+            if nodat is not None:
+                bmlist.append( barr==nodat )
+            else:
+                bmlist.append( np.full_like( barr, False, dtype=np.bool ) )
+        allbands = np.ma.dstack( blist )
+        allbands.mask = np.dstack( bmlist )
+        if nodat is not None:
+            allbands.set_fill_value( nodat )
+        return allbands
         
     def new_image_from_array(self,bandarr,outfilename=None,dtype=GDT_Float32,no_data_value=-99):
         """
