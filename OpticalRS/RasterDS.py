@@ -9,7 +9,7 @@ Created on Fri Jun 27 14:58:13 2014
 """
 
 import os
-from osgeo import gdal, ogr
+from osgeo import gdal, ogr, osr
 from osgeo.gdalconst import *
 import numpy as np
 
@@ -63,6 +63,11 @@ class RasterDS(object):
         return self.gdal_ds.GetProjection()
         
     @property
+    def epsg(self):
+        srs = osr.SpatialReference(wkt=self.projection_wkt)
+        return int( srs.GetAttrValue('AUTHORITY',1) )
+        
+    @property
     def output_file_path(self):
         """
         Return a file path for output. Assume that we'll output same file extension.
@@ -89,14 +94,22 @@ class RasterDS(object):
         Return the image data in a numpy array of shape (Rows, Columns, Bands).
         If the image has a "no data value" return a masked array.
         """
-        barr = self.gdal_ds.ReadAsArray()
+        return self.band_array_subset()
+        
+    def band_array_subset(self,xoff=0, yoff=0, win_xsize=None, win_ysize=None):
+        """
+        Return the image data in a numpy array of shape (Rows, Columns, Bands).
+        If the image has a "no data value" return a masked array. Take a subset
+        if subset values are given.
+        """
+        #barr = self.gdal_ds.ReadAsArray()
         #ourarr = barr.T.swapaxes(0,1)
         blist = []
         bmlist = []
         for b in range( self.gdal_ds.RasterCount ):
             b += 1 #Bands are 1 based indexed
             band = self.gdal_ds.GetRasterBand( b )
-            barr = band.ReadAsArray()
+            barr = band.ReadAsArray(xoff=xoff,yoff=yoff,win_xsize=win_xsize,win_ysize=win_ysize)
             blist.append( barr )
             nodat = band.GetNoDataValue()
             if nodat is not None:
@@ -107,6 +120,9 @@ class RasterDS(object):
         allbands.mask = np.dstack( bmlist )
         if nodat is not None:
             allbands.set_fill_value( nodat )
+        # make sure that a single band raster will return (Rows,Columns,1(Band))
+        if allbands.ndim==2:
+            np.expand_dims(allbands,2)
         return allbands
         
     def new_image_from_array(self,bandarr,outfilename=None,dtype=GDT_Float32,no_data_value=-99):

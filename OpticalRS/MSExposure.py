@@ -81,5 +81,45 @@ def multi_apply_rank_filter( img, func, **kwargs ):
     outarr.mask = img.mask
     return outarr
     
+def multi_rescale_intensity( img, p0=0, p1=99, out_range='dtype' ):
+    """
+    Apply skimage.exposure.rescale_intensity to each band. Use percentiles p0 
+    and p1 to determine the in_range.
+    """
+    imshp = img.shape
+    if img.ndim > 2:
+        nbands = imshp[-1]
+    else:
+        nbands = 1
+    outlist = []
+    for i in range(nbands):
+        barr = img[:,:,i]
+        inmin = np.percentile( barr.compressed(), p0 )
+        inmax = np.percentile( barr.compressed(), p1 )
+        outband = exposure.rescale_intensity( barr, in_range=(inmin,inmax), out_range=out_range )
+        outlist.append( outband )
+    outarr = np.ma.MaskedArray( np.dstack(outlist), mask=img.mask, fill_value=img.fill_value )
+    return outarr
+    
 def equalize_adapthist( img, **kwargs ):
     return multi_apply_with_mask_as_mean( img, exposure.equalize_adapthist, **kwargs )
+    
+def equalize_hist( img ):
+    """
+    Given an image of shape RxCxBands, histogram equalize each band
+    and reassemble into same shape and return.
+    """
+    nbins = 256
+    imshp = img.shape
+    nbands = imshp[-1]
+    npix = imshp[0] * imshp[1]
+    # flatten each band
+    img_rs = img.reshape( [npix,nbands] )
+    # handle masked arrays
+    if type( img_rs )==np.ma.core.MaskedArray:
+        img_rs_eh = np.ma.apply_along_axis(lambda x: exposure.equalize_hist(x.data,nbins=nbins,mask=~x.mask), 0, img_rs)
+        img_rs_eh.mask = img_rs.mask
+    # apply histogram equalization along each band
+    else:
+        img_rs_eh = np.apply_along_axis(exposure.equalize_hist, 0, img_rs)
+    return img_rs_eh.reshape( imshp )

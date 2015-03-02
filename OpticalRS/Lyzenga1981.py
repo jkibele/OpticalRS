@@ -17,6 +17,8 @@ from math import sqrt
 from fractions import Fraction
 from decimal import Decimal
 from itertools import combinations
+from matplotlib import pyplot as plt
+from scipy import odr
 
 ##-- Straight from the paper --##
 ## The following 2 methods are meant to implement methods explicitly described
@@ -145,3 +147,54 @@ def di_indexes_bandarr(imarr,sandarr,n_bands,subset_slice=None,pix_band_shaped=F
     if pix_band_shaped:
         out_arr = out_arr.reshape( out_arr.shape[0]*out_arr.shape[1], -1 )
     return out_arr, combos
+    
+def lin_odr(x,y):
+    """
+    Simple version of Orthoganal Distance Regression for y=mx+b.
+    
+    Args:
+        x (array): x values
+        y (array): y values
+        
+    Returns:
+        slope: m in y=mx+b
+        intercept: b in y=mx+b
+        res_var: Residual Variance. Apparently a measure of goodness
+            of fit. Smaller values mean better fit.
+            
+    Notes: The scipy.odr package has a lot of options. This is a
+        much simplified, narrowed down useage. Check [here](http://docs.scipy.org/doc/scipy/reference/odr.html)
+        for more documentation or, for even more, check [here](http://docs.scipy.org/doc/external/odrpack_guide.pdf).
+    """
+    def lf(B,x):
+        return B[0]*x + B[1]
+    linmod = odr.Model(lf)
+    mydata = odr.RealData(x,y)
+    myodr = odr.ODR(mydata,linmod,beta0=[1.,2.])
+    myout = myodr.run()
+    slope,intercept = myout.beta
+    return slope, intercept, myout.res_var
+    
+def plot_band_combos(sandarr,n_bands,figsize=(15,15)):
+    logarr = np.log(sandarr[:,:,:n_bands])
+    logmax = logarr.max()
+    logmin = logarr.min()
+    fig,axarr = plt.subplots(n_bands-1,n_bands-1,figsize=figsize,sharex=True,sharey=True,frameon=False)
+    for i,j in combinations(range(n_bands),2):
+        x,y = logarr[:,:,i].flatten(),logarr[:,:,j].flatten()
+        axarr[i,j-1].set_axis_off()
+        ax = axarr[j-1,i]
+        ax.set_axis_on()
+        ax.scatter(x,y,alpha=0.01,c='steelblue',marker='o')
+        ax.set_xlim(logmin,logmax)
+        ax.set_ylim(logmin,logmax)
+        xl = r"band %i" % (i + 1)
+        yl = r"band %i" % (j + 1)
+        ax.set_xlabel(xl)
+        ax.set_ylabel(yl)
+        ax.set_frame_on(False)
+        odrslope,odrinter,odr_res_val = lin_odr(x,y)
+        odrline = lambda x: odrslope*x + odrinter
+        xmm = np.array([x.min(),x.max()])
+        ax.plot(xmm,odrline(xmm),c='r')
+        plt.tight_layout()

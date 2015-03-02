@@ -6,6 +6,7 @@ import Sagawa2010
 import LandMasking
 import MSExposure
 import MSDisplay
+import RasterSubset
 
 __author__ = 'Jared Kibele'
 __email__ = 'jkibele@gmail.com'

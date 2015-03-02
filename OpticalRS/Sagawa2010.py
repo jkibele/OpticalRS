@@ -62,7 +62,8 @@ def band_attenuation_geometric(bandarr,deptharr):
     Given a single (Rows x Columns) band array and a depth array from the same 
     region, return -K*g value for that band. See section 2.2 and 2.3 from 
     Sagawa et al., 2010. The arrays you pass in should be taken from an area 
-    with uniform substrate and varying depth.
+    with uniform substrate and varying depth. The arrays must also be the same
+    shape and, if masked, the masks must be the same.
     
     Args:
         bandarr (numpy.array): Array of reflectance (or radiance or DN) values
@@ -87,9 +88,17 @@ def band_attenuation_geometric(bandarr,deptharr):
             reflectance index calculations but can give you an idea of how well
             the regression fit the data.        
     """
-    lnY = np.log(bandarr).flatten()
-    X = deptharr.flatten()
-    slope, intercept, r_value, p_value, std_err = linregress(X,lnY)
+    if np.ma.is_masked(deptharr):
+        X = deptharr.compressed()
+    else:
+        X = deptharr.ravel()
+        
+    if np.ma.is_masked(bandarr):
+        Y = bandarr.compressed()
+    else:
+        Y = bandarr.ravel()
+        
+    slope, intercept, r_value, p_value, std_err = linregress(X,np.log(Y))
     return slope, intercept, r_value
     
 def single_band_reflectance_index(single_band_arr,depth_arr,negKG):
@@ -117,7 +126,7 @@ def single_band_reflectance_index(single_band_arr,depth_arr,negKG):
             containing reflectance index values. This index is (or should be)
             linearly related to bottom reflectance.
     """
-    RI = single_band_arr / np.exp(negKG*depth_arr)
+    RI = np.log( single_band_arr ) - negKG * depth_arr
     return RI
     
 def negKg_regression_array(bandarr,deptharr,band_list=None):
@@ -223,4 +232,4 @@ def reflectance_index(bandarr,deptharr,negKgarr,band_list=None):
     for i in band_list:
         RI = single_band_reflectance_index(bandarr[:,:,i], deptharr, negKgarr[i])
         arrlist.append(RI)
-    return np.dstack(arrlist)
+    return np.ma.dstack(arrlist)

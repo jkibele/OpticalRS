@@ -41,20 +41,16 @@ def multiband_histogram( img, nbins=256, figwidth=14 ):
         
 def view_bands( img, **kwargs ):
     nbands = img.shape[-1]
-    if kwargs.has_key('ncols'):
-        ncols = kwargs['ncols']
-    else:
-        ncols = 2
-    if kwargs.has_key('figwidth'):
-        figwidth = kwargs['figwidth']
-    else:
-        figwidth = 14
+    ncols = kwargs.pop('ncols',2)
+    figwidth = kwargs.pop('figwidth',14)
+    cmap = kwargs.pop('cmap',None)
     nrows = int( ceil( nbands/2.0 ))
+    subset = kwargs.pop('subset',np.s_[:,:,:])
     fig, axarr = subplots(nrows, ncols, sharex=True, sharey=True, figsize=(figwidth, (figwidth/3.5)*nrows))
     for i, barr in enumerate( np.dsplit(img, nbands) ):
         ax = axarr.ravel()[i]
         axtit = "Band %i" % (i + 1)
         ax.set_title(axtit)
-        ax.imshow( barr.squeeze() )
+        ax.imshow( barr[subset].squeeze(), cmap=cmap )
         ax.axis('off')
     
