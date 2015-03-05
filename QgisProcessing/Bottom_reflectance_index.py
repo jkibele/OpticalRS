@@ -1,3 +1,4 @@
+##OpticalRS=group
 ##Multispectral_raster=raster
 ##Depth_raster=raster
 ##Sand_shape=vector

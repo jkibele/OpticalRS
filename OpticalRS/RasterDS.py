@@ -119,7 +119,12 @@ class RasterDS(object):
         allbands = np.ma.dstack( blist )
         allbands.mask = np.dstack( bmlist )
         if nodat is not None:
-            allbands.set_fill_value( nodat )
+            try:
+                allbands.set_fill_value( nodat )
+            except ValueError:
+                # This means band.GetNoDataValue() is returning nan for integer layer
+                # I just won't set the fill value
+                pass
         # make sure that a single band raster will return (Rows,Columns,1(Band))
         if allbands.ndim==2:
             np.expand_dims(allbands,2)
