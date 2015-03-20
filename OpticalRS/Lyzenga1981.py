@@ -24,12 +24,13 @@ from scipy import odr
 ## The following 2 methods are meant to implement methods explicitly described
 ## in Lyzenga 1981.
 
-def attenuation_coef_ratio(band_i,band_j,transform=np.log):
+def attenuation_coef_ratio(band_i,band_j):
     r"""
     Calculate the attenuation coefficient ratio as described in Lyzenga (1981).
     You should supply this function with arrays that are drawn from an area of
     uniform bottom type and varying depth. Sand is usually pretty easy to 
-    identify and seems to be the substrate of choice for this sort of thing.
+    identify and seems to be the substrate of choice for this sort of thing. 
+    For details see equations 4, 5, and 6 of Lyzenga 1981.
     
     Args:
         band_i (numpy.array): array of reflectance values over a uniform stubstrate
@@ -39,7 +40,8 @@ def attenuation_coef_ratio(band_i,band_j,transform=np.log):
             i from a different band, j.
             
     Returns:
-        float. The attention coeffiecient ratio.
+        float. The attention coeffiecient ratio Ki/Kj. Described in equation 4
+        of Lyzenga 1981.
     
     .. math::
         \frac{k_i}{k_j} = a + \sqrt{ a^2 + 1 }
@@ -50,11 +52,19 @@ def attenuation_coef_ratio(band_i,band_j,transform=np.log):
     variance of :math:`band_j` and :math:`\sigma_{ij}` is the covariance between
     :math:`band_i` and :math:`band_j`.
     """
-    band_i = band_i.flatten()
-    band_j = band_j.flatten()
-    if transform:
-        band_i = transform(band_i)
-        band_j = transform(band_j)
+    if np.ma.is_masked(band_i):
+        band_i = band_i.compressed()
+    else:
+        band_i = band_i.ravel()
+        
+    if np.ma.is_masked(band_j):
+        band_j = band_j.compressed()
+    else:
+        band_j = band_j.ravel()
+        
+    band_i = np.log(band_i)
+    band_j = np.log(band_j)
+        
     cov_mat = np.cov(band_i,band_j)
     i_var = cov_mat[0,0]
     j_var = cov_mat[1,1]
