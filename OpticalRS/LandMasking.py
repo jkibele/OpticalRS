@@ -64,3 +64,41 @@ def simple_land_mask(in_arr,threshold=50):
     output[np.where(band == 0)] = 0
     
     return output
+    
+def mask_land(imarr, nir_threshold=100, conn_threshold=1000, structure=None):
+    """
+    Return a masked array where land is masked and water is not. This is 
+    accomplished by looking at the longest wavelength band (assumed to be the
+    last band), masking everything above nir_threshold, and then masking 
+    unmasked pixels connected to fewer than conn_threshold unmasked pixels.
+    
+    Args:
+        imarr (numpy.array): An array of shape (Rows,Columns,Bands). The
+            multipectral image you wish to mask.
+        
+        nir_threshold (int or float): The pixel value cut-off. Pixels with a 
+            value lower than this will be considered water and be left
+            unmasked. Pixels with a value above will be considered land and
+            will be masked.
+            
+        conn_threshold (int): Groups of unmasked pixels connected to fewer than
+            this number of other unmasked pixels will be masked.
+            
+    Returns:
+        output (numpy.ma.MaskedArray): A copy of imarr that has been masked. 
+            The mask is generated from only one band but will be stacked as 
+            many times as necessary to mask all the bands.
+    """
+    nirband = imarr[:,:,-1]
+    simpmask = simple_land_mask( nirband, threshold=nir_threshold )
+    #define how raster cells touch
+    if structure:
+        connection_structure = structure
+    else:
+        connection_structure = None
+    mask1d = connectivity_filter( simpmask, threshold=conn_threshold, structure=connection_structure )
+    
+    nbands = imarr.shape[-1]
+    mask = np.repeat( np.expand_dims(mask1d,2), nbands, axis=2 )
+    return np.ma.masked_where( mask<>1, imarr )
+    
