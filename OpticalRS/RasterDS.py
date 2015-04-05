@@ -11,6 +11,7 @@ Created on Fri Jun 27 14:58:13 2014
 import os
 from osgeo import gdal, ogr, osr
 from osgeo.gdalconst import *
+from osgeo.gdal_array import NumericTypeCodeToGDALTypeCode
 import numpy as np
 
 class RasterDS(object):
@@ -130,10 +131,24 @@ class RasterDS(object):
             np.expand_dims(allbands,2)
         return allbands
         
-    def new_image_from_array(self,bandarr,outfilename=None,dtype=GDT_Float32,no_data_value=-99):
+    def new_image_from_array(self,bandarr,outfilename=None,dtype=None,no_data_value=None):
         """
         Save an image like self from a band array.
         """
+        if dtype==None:
+            # try to translate the dtype
+            dtype = NumericTypeCodeToGDALTypeCode( bandarr.dtype )
+            if dtype==None:
+                # if that didn't work out, just make it float32
+                dtype = GDT_Float32
+        if no_data_value==None:
+            # try to figure it if it's a masked array
+            if np.ma.is_masked( bandarr ):
+                no_data_value = bandarr.fill_value
+                bandarr = bandarr.filled()
+            else:
+                # just make it -99 and hope for the best
+                no_data_value = -99
         bandarr = np.rollaxis(bandarr,2,0)
         if not outfilename:
             outfilename = self.output_file_path()
