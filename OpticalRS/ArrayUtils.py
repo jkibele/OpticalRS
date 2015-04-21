@@ -33,12 +33,18 @@ def each_band_masked( imarr, funct, *args, **kwargs ):
     outlist = []
     ismalist = []
     for i in range( imarr.shape[-1] ):
-        newband = funct( imarr, *args, **kwargs )
+        newband = funct( imarr[:,:,i], *args, **kwargs )
         outlist.append( newband )
         ismalist.append( type(newband)==np.ma.MaskedArray )
+#        print "%.1f - %.1f, " % (newband.min(),newband.max()),
     if False in ismalist:
-        warnings.warn( "A function returned an unmasked array when a masked array was expected.")
-    return np.ma.dstack( outlist )
+        warnings.warn( "A function returned an unmasked array when a masked array was expected. I'll try to copy the mask from the input array.")
+        outarr = np.ma.dstack( outlist )
+        outarr.mask = imarr.mask
+        outarr.set_fill_value( imarr.fill_value )
+        return outarr
+    else:
+        return np.ma.dstack( outlist )
     
 def each_band( imarr, funct, *args, **kwargs ):
     if type(imarr)==np.ma.MaskedArray:

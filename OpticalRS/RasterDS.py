@@ -144,11 +144,17 @@ class RasterDS(object):
         if no_data_value==None:
             # try to figure it if it's a masked array
             if np.ma.is_masked( bandarr ):
-                no_data_value = bandarr.fill_value
+                # gdal does not like the numpy dtypes
+                no_data_value = np.asscalar( bandarr.fill_value )
                 bandarr = bandarr.filled()
             else:
                 # just make it -99 and hope for the best
                 no_data_value = -99
+        else: # a no_data_value has been supplied by the user
+            if np.ma.is_masked( bandarr ):
+                # set the array's fill value to no_data_value
+                bandarr.fill_value = no_data_value
+                bandarr = bandarr.filled()
         bandarr = np.rollaxis(bandarr,2,0)
         if not outfilename:
             outfilename = self.output_file_path()
