@@ -2,6 +2,7 @@
 from OpticalRS import *
 from RasterDS import *
 import Lyzenga1981
+import Lyzenga2006
 import Sagawa2010
 import LandMasking
 import MSExposure

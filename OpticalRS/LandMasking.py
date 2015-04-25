@@ -28,7 +28,21 @@ def connectivity_filter(in_array,threshold=1000,structure=None):
     
     #Then use the bincount to set the output values
     out_array = np.where(b_count[labelled_array] <= threshold, 0, in_array)
-    return out_array
+    
+    #Respect the mask
+    if np.ma.is_masked( in_array ):
+        out_array = np.ma.MaskedArray( out_array, mask=in_array.mask )
+    
+    return out_array.astype( in_array.dtype )
+    
+def two_way_connectivity_filter( in_array, threshold=1000, structure=None):
+    """
+    Filter ones, then filter zeros
+    """
+    filtered1 = connectivity_filter( in_array, threshold, structure )
+    filtered2 = ~connectivity_filter( ~filtered1, threshold, structure )
+    return filtered2
+    
 
 def simple_land_mask(in_arr,threshold=50):
     """

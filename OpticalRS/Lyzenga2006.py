@@ -6,55 +6,11 @@ Created on Thu Mar  5 19:17:24 2015
 """
 
 import numpy as np
+from skimage.filters import rank
+from skimage import morphology
 
 ## Deep water masking --------------------------------------------------------
-def band_percentiles( imarr, p=10 ):
-    """
-    Return the percentile for each band of an image array of shape (RxCxN)
-    where N is the number of bands.
-    
-    Parameters
-    ----------
-      imarr : numpy array or masked array
-        An 3 dimensional array (RxCxN) where the third dimension (N) is the 
-        number of bands. If imarr is masked, then only unmasked values will be
-        considered.
-        
-      p : float in range [0,100] (or sequence of floats)
-        Percentile to compute which must be between 0 and 100 inclusive.
-        
-    Returns
-    -------
-      percentile : ndarray
-        If a single `p` value is given the results will be a 1d array of length
-        N, where N is the 3rd dimension of `imarr` (RxCxN). If multiple `p`
-        values are given, the results will be of shape N x length(p). If the 
-        input contains integers, or floats of smaller precision than 64, then 
-        the output data-type is float64. Otherwise, the output data-type is the 
-        same as that of the input.
-    """
-    p_list = []
-    n_bands = imarr.shape[-1]
-    for i in range( n_bands ):
-        if np.ma.is_masked:
-            band = imarr[:,:,i].compressed()
-        else:
-            band = imarr[:,:,i].ravel()
-        p_list.append( np.percentile( band, p ) )
-    return np.array( p_list )
-    
-#def deep_pixels( imarr, p=10, bands=None ):
-#    """
-#    
-#    """
-#    if bands:
-#        arr = imarr[:,:,bands]
-#    else:
-#        arr = imarr
-#    thresh = band_percentiles( arr, p )
-#    thresh_pix = ~(arr > thresh).all(axis=2)
-#    return thresh_pix
-    
+
 def dark_pixels( imarr, p=10 ):
     # average DNs to get (RxCx1) brightness
     brt = imarr.mean(axis=2)
@@ -64,19 +20,48 @@ def dark_pixels( imarr, p=10 ):
         dark_pix.set_fill_value( False )
     return dark_pix
     
-def dark_pixel_array( imarr, p=10 ):
-    dp = dark_pixels( imarr, p )
+def moving_window( dark_arr, win_size=3 ):
+    win = morphology.square( win_size )
+    npix = win.size
+    if np.ma.is_masked( dark_arr ):
+        outarr = rank.sum( dark_arr.filled().astype('uint8'), win ) / float( npix )
+        outarr = np.ma.MaskedArray( outarr, mask=dark_arr.mask, fill_value=dark_arr.fill_value )
+    else:
+        outarr = rank.sum( dark_arr.astype('uint8'), win ) / float( npix )
+    return outarr
+    
+def dark_kernels( imarr, p=10, win_size=3, win_percentage=50 ):
+    dps = dark_pixels( imarr, p=p )
+    if win_size:
+        dmeans = moving_window( dps, win_size=win_size )
+        dps = dmeans >= (win_percentage/100.0)
+    return dps.astype('bool')
+    
+def dark_pixel_array( imarr, p=10, win_size=3, win_percentage=50 ):
+    dp = dark_kernels( imarr, p, win_size, win_percentage )
     dparr = imarr.copy()
     dparr.mask = ~np.repeat( np.expand_dims( dp.filled(), 2 ), 8, 2 )
-    return dparr    
+    return dparr   
+    
+def bg_thresholds( dark_arr, n_std=3 ):
+    nbands = dark_arr.shape[-1]
+    darkmeans = dark_arr.reshape(-1,nbands).mean(0).data
+    darkstds = dark_arr.reshape(-1,nbands).std(0).data
+    return darkmeans + n_std * darkstds
 
 ## Glint correction ----------------------------------------------------------
 
 def nir_mean(msarr,nir_band=7):
-    return msarr[:,:,nir_band].mean()
+    return msarr[...,nir_band].mean()
     
 def cov_ratio(msarr,band,nir_band=7):
-    cov_mat = np.cov(msarr[:,:,band].flatten(),msarr[:,:,nir_band].flatten())
+    if np.ma.is_masked( msarr ):
+        b = msarr[...,band].compressed()
+        nir_b = msarr[...,nir_band].compressed()
+    else:
+        b = msarr[...,band].flatten()
+        nir_b = msarr[...,nir_band].flatten()
+    cov_mat = np.cov( b, nir_b )
     return cov_mat[0,1] / cov_mat[1,1]
     
 def cov_ratios(msarr,nir_band=7):
