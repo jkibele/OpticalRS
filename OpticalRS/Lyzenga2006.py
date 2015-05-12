@@ -61,7 +61,7 @@ def cov_ratio(msarr,band,nir_band=7):
     else:
         b = msarr[...,band].flatten()
         nir_b = msarr[...,nir_band].flatten()
-    cov_mat = np.cov( b, nir_b )
+    cov_mat = np.cov( b, nir_b, bias=1 )
     return cov_mat[0,1] / cov_mat[1,1]
     
 def cov_ratios(msarr,nir_band=7):

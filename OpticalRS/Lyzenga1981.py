@@ -185,13 +185,19 @@ def lin_odr(x,y):
     slope,intercept = myout.beta
     return slope, intercept, myout.res_var
     
-def plot_band_combos(sandarr,n_bands,figsize=(15,15)):
-    logarr = np.log(sandarr[:,:,:n_bands])
+def plot_band_combos(sandarr,n_bands,apply_log=True,figsize=(15,15)):
+    if apply_log:
+        logarr = np.log( sandarr[:,:,:n_bands] )
+    else:
+        logarr = sandarr[:,:,:n_bands]
     logmax = logarr.max()
     logmin = logarr.min()
     fig,axarr = plt.subplots(n_bands-1,n_bands-1,figsize=figsize,sharex=True,sharey=True,frameon=False)
     for i,j in combinations(range(n_bands),2):
-        x,y = logarr[:,:,i].flatten(),logarr[:,:,j].flatten()
+        if np.ma.is_masked:
+            x,y = logarr[:,:,i].compressed(),logarr[:,:,j].compressed()
+        else:
+            x,y = logarr[:,:,i].ravel(),logarr[:,:,j].ravel()
         axarr[i,j-1].set_axis_off()
         ax = axarr[j-1,i]
         ax.set_axis_on()
