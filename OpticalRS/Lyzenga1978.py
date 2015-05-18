@@ -77,6 +77,39 @@ def B5(b,i,j):
 def B6(b,i,j):
     return -1.0 * ( (b[:i+1]**2).sum()**(0.5) ) * ( (b[:i+2]**2).sum()**(-0.5) )
     
+def Aij(b):
+    """
+    Return coordinate system rotation parameters for use in caclulating
+    depth invariant index (equation 8, Lyzenga 1978).
+    
+    Parameters
+    ----------
+      b : np.array
+        Slopes from regressing depths against logged radiance values.
+        For more info see the doc string for `Lyzenga1978.regressions`
+        or Appendix B of Lyzenga 1978.
+        
+    Returns
+    -------
+      A : np.array
+        Coordinate system rotation parameters for use in caclulating
+        depth invariant index (equation 8, Lyzenga 1978). See equation
+        8 and Appendix B of Lyzenga 1978.
+    """
+    N = len(b)
+    A = np.empty( (N,N), dtype='float' )
+    for i in range( N ):
+        for j in range( N ):
+            if i==N-1: # python is zero indexed
+                A[i,j] = B2(b,j)
+            elif j<=i:
+                A[i,j] = B5(b,i,j)
+            elif j==i+1:
+                A[i,j] = B6(b,i,j)
+            else:
+                A[i,j] = 0.0
+    return A
+    
 def Y_i(i,A,X):
     return (A[i,:] * X[...,:]).sum(2)
     

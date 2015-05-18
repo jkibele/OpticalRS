@@ -13,6 +13,7 @@ from osgeo import gdal, ogr, osr
 from osgeo.gdalconst import *
 from osgeo.gdal_array import NumericTypeCodeToGDALTypeCode
 import numpy as np
+from RasterSubset import masked_subset
 
 class RasterDS(object):
     """
@@ -130,6 +131,20 @@ class RasterDS(object):
         if allbands.ndim==2:
             np.expand_dims(allbands,2)
         return allbands
+        
+    def geometry_subset(self, geom):
+        """
+        Return a subset of rds band array where the extent is the bounding box 
+        of geom and all cells outside of geom are masked.
+                    
+        geom: shapely geometry
+            The polygon bounding the area of interest.
+            
+        Returns:
+            A numpy masked array of shape (Rows,Columns,Bands). Cells not within
+            geom will be masked as will any values that were masked in rds.
+        """
+        return masked_subset(self, geom)
         
     def new_image_from_array(self,bandarr,outfilename=None,dtype=None,no_data_value=None):
         """

@@ -24,7 +24,7 @@ from scipy import odr
 ## The following 2 methods are meant to implement methods explicitly described
 ## in Lyzenga 1981.
 
-def attenuation_coef_ratio(band_i,band_j):
+def attenuation_coef_ratio(band_i,band_j,apply_log=True):
     r"""
     Calculate the attenuation coefficient ratio as described in Lyzenga (1981).
     You should supply this function with arrays that are drawn from an area of
@@ -62,8 +62,9 @@ def attenuation_coef_ratio(band_i,band_j):
     else:
         band_j = band_j.ravel()
         
-    band_i = np.log(band_i)
-    band_j = np.log(band_j)
+    if apply_log:
+        band_i = np.log(band_i)
+        band_j = np.log(band_j)
         
     cov_mat = np.cov(band_i,band_j)
     i_var = cov_mat[0,0]
@@ -74,7 +75,7 @@ def attenuation_coef_ratio(band_i,band_j):
     att_coef = a + sqrt( a**2 + 1 )
     return att_coef
     
-def di_index(imarr,sandarr,i,j):
+def di_index(imarr,sandarr,i,j,apply_log=True):
     r"""
     This method implements equation 2 from Lyzenga 1981 to generate a single depth
     invariant index from a pair of bands.
@@ -93,7 +94,7 @@ def di_index(imarr,sandarr,i,j):
         j (int): The zero indexed band number for the second band to be included 
             in the calculation of the index.
     """
-    atr = attenuation_coef_ratio(sandarr[:,:,i],sandarr[:,:,j])
+    atr = attenuation_coef_ratio(sandarr[:,:,i],sandarr[:,:,j],apply_log=apply_log)
     fr = Fraction(Decimal(atr))
     Ki,Kj = fr.numerator,fr.denominator
     Bi = imarr[:,:,i]
@@ -149,11 +150,16 @@ def di_indexes_bandarr(imarr,sandarr,n_bands,subset_slice=None,pix_band_shaped=F
     combos = [cb for cb in combinations( range(n_bands), 2 ) ]
     n_combos = len( combos )
     arrdtype = imarr.dtype
-    out_arr = np.empty((imarr.shape[0],imarr.shape[1],n_combos),dtype=arrdtype)
+    if np.ma.is_masked( imarr ):
+        out_arr = np.ma.empty((imarr.shape[0],imarr.shape[1],n_combos),dtype=arrdtype)
+    else:
+        out_arr = np.empty((imarr.shape[0],imarr.shape[1],n_combos),dtype=arrdtype)
     for ind,bc in enumerate( combos ):
         i,j = bc
         di_ind = di_index(imarr,sandarr,i,j)
         out_arr[:,:,ind] = di_ind
+        if np.ma.is_masked( imarr ):
+            out_arr[...,ind].mask = imarr[...,i].mask | imarr[...,j].mask
     if pix_band_shaped:
         out_arr = out_arr.reshape( out_arr.shape[0]*out_arr.shape[1], -1 )
     return out_arr, combos
