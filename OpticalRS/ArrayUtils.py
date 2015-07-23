@@ -7,6 +7,35 @@ Created on Thu Mar 26 14:09:45 2015
 
 import warnings
 import numpy as np
+import pandas as pd
+
+def equalize_band_masks( marr ):
+    """
+    For a multiband masked array, ensure that a pixel masked in one band
+    is masked in all bands so that each band has an equal number of masked
+    pixels.
+    """
+    nbands = marr.shape[-1]
+    anymask = np.repeat( np.expand_dims( marr.mask.any(2), 2 ), nbands, 2 )
+    marr.mask = anymask
+    return marr
+    
+def band_df( imarr, bandnames=None, equalize_masks=True ):
+    """
+    Return a pandas dataframe with spectral values and depths from `imarr`.
+    """
+    if equalize_masks and np.ma.isMaskedArray(imarr):
+        imarr = equalize_band_masks( imarr )
+    nbands = imarr.shape[-1]
+    if not bandnames:
+        bandnames = [ 'band'+str(i+1) for i in range( nbands ) ]
+    ddict = {}
+    for bn in range( nbands ):
+        if np.ma.isMaskedArray(imarr):
+            ddict[bandnames[bn]] = imarr[...,bn].compressed()
+        else:
+            ddict[bandnames[bn]] = imarr[...,bn].ravel()
+    return pd.DataFrame( ddict )
 
 def band_percentiles( imarr, p=10 ):
     """
@@ -77,17 +106,40 @@ def mask3D_with_2D( imarr, mask, keep_old_mask=True ):
         out = np.ma.MaskedArray( imarr, mask=rmask, )
     return out
     
-def rescale( x, rmin=0.0, rmax=1.0 ):
+def rescale( x, rmin=0.0, rmax=1.0, clip_extremes=False, plow=1.0, phigh=99.0 ):
     """
     Scale (normalize) the values of an array to fit in the interval [rmin,rmax].
     
-    Args:
-        x (numpy.array or maskedarray): The array you want to scale.
+    Parameters
+    ----------
+      x : numpy.array or maskedarray 
+        The array you want to scale.
+      rmin : float or int
+        The minimum that you'd like to scale to. Default=0.0
+      rmax : float or int
+        The maximum to scale to. Default=1.0
+      clip_extremes : boolean
+        If True, mask values below `plow` percentile and values above `phigh`
+        percentile. Default=False.
+      plow : float or int
+        Lower percentile for range of values to keep. Ignored if `clip_extremes`
+        is False.
+      phigh : float or int
+        Upper percentile for range of values to keep. Ignored if `clip_extremes`
+        is False.
         
     Returns:
         array of floats. Masked values (if there are any) are not altered.
     """
-    return rmin + (rmax - rmin) * ( x - x.min() ) / float( x.max() - x.min() )
+    if clip_extremes:
+        low_lim = np.percentile( x, plow )
+        high_lim = np.percentile( x, phigh )
+        x = np.ma.masked_outside( x, low_lim, high_lim )
+    print x.min(), x.max(),
+    outarr = rmin + (rmax - rmin) * ( x - x.min() ) / float( x.max() - x.min() )
+    print "------",
+    print outarr.min(), outarr.max()
+    return outarr
 
 def each_band_unmasked( imarr, funct, *args, **kwargs ):
     """

@@ -2,6 +2,8 @@
 """
 Created on Thu Mar  5 19:17:24 2015
 
+I developed this stuff in ClassificationDev/Lyzenga/Lyzenga2006/DeepWaterMasking.ipynb
+I need lots more documentation in here.
 @author: jkibele
 """
 
