@@ -129,16 +129,18 @@ def rescale( x, rmin=0.0, rmax=1.0, clip_extremes=False, plow=1.0, phigh=99.0 ):
         is False.
         
     Returns:
-        array of floats. Masked values (if there are any) are not altered.
+        array of floats. Masked values (if there are any) are not altered
+          unless `clip_extremes==True` in which case pixels outside the
+          percentiles `plow` and `phigh` will be masked.
     """
     if clip_extremes:
         low_lim = np.percentile( x, plow )
         high_lim = np.percentile( x, phigh )
         x = np.ma.masked_outside( x, low_lim, high_lim )
-    print x.min(), x.max(),
+#    print x.min(), x.max(),
     outarr = rmin + (rmax - rmin) * ( x - x.min() ) / float( x.max() - x.min() )
-    print "------",
-    print outarr.min(), outarr.max()
+#    print "------",
+#    print outarr.min(), outarr.max()
     return outarr
 
 def each_band_unmasked( imarr, funct, *args, **kwargs ):
@@ -147,7 +149,7 @@ def each_band_unmasked( imarr, funct, *args, **kwargs ):
     """
     outlist = []
     for i in range( imarr.shape[-1] ):
-        outlist.append( funct( imarr, *args, **kwargs ) )
+        outlist.append( funct( imarr[...,i], *args, **kwargs ) )
     return np.dstack( outlist )
     
 def each_band_masked( imarr, funct, *args, **kwargs ):
