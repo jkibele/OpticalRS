@@ -8,9 +8,9 @@ Created on Fri Jun 27 14:58:13 2014
 @author: jkibele
 """
 
-import os
-from osgeo import gdal, ogr, osr
-from osgeo.gdalconst import GDT_Unknown,GDT_Byte,GDT_UInt16,GDT_Int16,GDT_UInt32,GDT_Int32,GDT_Float32, GDT_Float64,GDT_CInt16,GDT_CInt32,GDT_CFloat32,GDT_CFloat64
+import os,sys
+from osgeo import gdal, osr
+from osgeo.gdalconst import * 
 from osgeo.gdal_array import NumericTypeCodeToGDALTypeCode
 import numpy as np
 from RasterSubset import masked_subset
