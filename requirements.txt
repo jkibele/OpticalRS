@@ -11,4 +11,4 @@ rasterstats==0.5
 # don't work in virtualenv for readthedocs.org
 # These are avoided by using mock in docs/conf.py
 # matplotlib==1.4.3
-GDAL==1.11.0
+# GDAL==1.11.0
