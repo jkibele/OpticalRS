@@ -3,11 +3,11 @@ wheel==0.23.0
 numpy==1.9.2
 pandas==0.16.2
 statsmodels==0.6.1
-scikit-image==0.11.3
 
 # don't work in virtualenv for readthedocs.org
 # These are avoided by using mock in docs/conf.py
 # matplotlib==1.4.3
+# scikit-image==0.11.3
 # GDAL==1.11.0
 # geopandas==0.1.1
 # rasterstats==0.5
