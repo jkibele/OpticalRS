@@ -17,7 +17,7 @@ import sys
 import os
 # The following is added from https://read-the-docs.readthedocs.org/en/latest/faq.html
 # to deal with modules that depend on C extensions
-from unittest.mock import MagicMock
+from mock import Mock as MagicMock
 
 class Mock(MagicMock):
     @classmethod
