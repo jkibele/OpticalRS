@@ -15,6 +15,17 @@
 
 import sys
 import os
+# The following is added from https://read-the-docs.readthedocs.org/en/latest/faq.html
+# to deal with modules that depend on C extensions
+from unittest.mock import MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
+
+MOCK_MODULES = ['GDAL']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory is
