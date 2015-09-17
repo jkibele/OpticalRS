@@ -17,15 +17,15 @@ import sys
 import os
 # The following is added from https://read-the-docs.readthedocs.org/en/latest/faq.html
 # to deal with modules that depend on C extensions
-#from mock import Mock as MagicMock
-#
-#class Mock(MagicMock):
-#    @classmethod
-#    def __getattr__(cls, name):
-#            return Mock()
-#
-#MOCK_MODULES = ['matplotlib','geopandas','rasterstats','scipy','osgeo']
-#sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+from mock import Mock as MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
+
+MOCK_MODULES = ['matplotlib','geopandas','rasterstats','scipy','osgeo','gdalconst','gdal_array']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory is
