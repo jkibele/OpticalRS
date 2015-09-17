@@ -5,6 +5,8 @@ import os
 import sys
 import re
 
+# read the version number out of __init__ so I don't have to remember to edit
+# it in 2 places.
 with open('OpticalRS/__init__.py') as f:
     for line in f:
         if line.startswith('__version__'):
