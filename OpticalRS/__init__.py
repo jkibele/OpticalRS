@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from OpticalRS import *
+from Const import *
 from RasterDS import *
 import Lyzenga1978
 import Lyzenga1981

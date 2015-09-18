@@ -43,6 +43,7 @@ project_root = os.path.dirname(cwd)
 sys.path.insert(0, project_root)
 
 import OpticalRS
+from OpticalRS import *
 
 # -- General configuration ---------------------------------------------
 
