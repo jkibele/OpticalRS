@@ -14,4 +14,4 @@ Features
 
 * TODO
 
-.. include:: ./AUTHORS.rst
+.. include:: AUTHORS.rst
