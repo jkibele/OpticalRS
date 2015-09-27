@@ -13,3 +13,5 @@ Features
 --------
 
 * TODO
+
+.. include:: docs/installation.rst
