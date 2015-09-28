@@ -3,7 +3,14 @@
 
 import os
 import sys
+import re
 
+# read the version number out of __init__ so I don't have to remember to edit
+# it in 2 places.
+with open('OpticalRS/__init__.py') as f:
+    for line in f:
+        if line.startswith('__version__'):
+            optrs_version = '.'.join( re.findall(r'\d+', line) )
 
 try:
     from setuptools import setup
@@ -14,18 +21,24 @@ except ImportError:
 readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
-requirements = [
-    # TODO: put package requirements here
-]
+requirements = ['numpy',
+                'pandas',
+                'statsmodels',
+                'matplotlib',
+                'scikit-image',
+                'GDAL',
+                'geopandas',
+                'rasterstats',
+                'scipy']
 
-test_requirements = [
-    # TODO: put package test requirements here
-]
+#test_requirements = [
+#    # TODO: put package test requirements here
+#]
 
 setup(
     name='OpticalRS',
-    version='0.1.0',
-    description='OpticalRS is a Python implementation of remote sensing methods from papers by David R. Lyzenga and others.',
+    version=optrs_version,
+    description='OpticalRS is a Python implementation of optical remote sensing methods for mapping of submerged habitats.',
     long_description=readme + '\n\n' + history,
     author='Jared Kibele',
     author_email='jkibele@gmail.com',
@@ -48,10 +61,10 @@ setup(
         "Programming Language :: Python :: 2",
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
+#        'Programming Language :: Python :: 3',
+#        'Programming Language :: Python :: 3.3',
+#        'Programming Language :: Python :: 3.4',
     ],
-    test_suite='tests',
-    tests_require=test_requirements
+#    test_suite='tests',
+#    tests_require=test_requirements
 )

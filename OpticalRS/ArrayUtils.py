@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Mar 26 14:09:45 2015
-
-@author: jkibele
+This module contains functions that are applied to numpy array representations
+of images. Unless stated otherwise, image arrays are expected to be of shape 
+(RowsxColumnsxN) where N is the number of bands.
 """
 
 import warnings
@@ -14,6 +14,12 @@ def equalize_band_masks( marr ):
     For a multiband masked array, ensure that a pixel masked in one band
     is masked in all bands so that each band has an equal number of masked
     pixels.
+    
+    Args:
+        marr (np.ma.MaskedArray): Image array with unequal band masks.
+        
+    Returns:
+        np.ma.MaskedArray: Image array with equal band masks
     """
     nbands = marr.shape[-1]
     anymask = np.repeat( np.expand_dims( marr.mask.any(2), 2 ), nbands, 2 )
@@ -23,6 +29,19 @@ def equalize_band_masks( marr ):
 def band_df( imarr, bandnames=None, equalize_masks=True ):
     """
     Return a pandas dataframe with spectral values and depths from `imarr`.
+    
+    Args:
+        imarr (np.array or np.ma.MaskedArray): The image array.
+        bandnames (list): A list of band names that will become column names
+            in the returned pandas datafrome. The list must be the same length 
+            of third dimension (number of bands) as imarr. If no list of 
+            bandnames is supplied, ['band1','band2',...,'bandN'] will be used.
+        equalize_masks (bool): If ``True``, ``ArrayUtils.equalize_band_masks``
+            will be called on imarr before the pandas dataframe is created.
+            
+    Returns:
+        pandas.DataFrame: A dataframe where the columns represent bands and 
+            each row represents a pixel.
     """
     if equalize_masks and np.ma.isMaskedArray(imarr):
         imarr = equalize_band_masks( imarr )
