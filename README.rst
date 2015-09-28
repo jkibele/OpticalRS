@@ -12,6 +12,6 @@ This library is offered for use without any warranty of any kind in the hope tha
 Features
 --------
 
-* The installation_ instructions.
+* The Installation_ instructions.
 
 .. _installation: docs/installation.rst
