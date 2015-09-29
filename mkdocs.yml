@@ -1,5 +1,11 @@
 site_name: OpticalRS
+repo_url: https://github.com/jkibele/OpticalRS
+site_author: Jared Kibele
 pages:
 - Home: index.md
 - Installation: installation.md
+- User Guide:
+    - 'Getting Started': gettingstarted.md
+    - 'Python API': pythonapi.md
+    - 'QGIS Processing Tools': qgisprocessing.md
 theme: bootstrap

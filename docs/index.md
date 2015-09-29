@@ -8,7 +8,13 @@ This library is offered for use without any warranty of any kind in the hope tha
 
 ## Features
 
-* Features will be listed
+* FOSS Python code for the implementation of methods from remote sensing journal papers listed below.
 * And more features listed
 
+## References
+
+1. Lyzenga, D.R., 1981. Remote sensing of bottom reflectance and water attenuation parameters in shallow water using aircraft and Landsat data. International Journal of Remote Sensing 2, 71–82. doi:10.1080/01431168108948342
+2. Lyzenga, D.R., 1978. Passive remote sensing techniques for mapping water depth and bottom features. Appl. Opt. 17, 379–383. doi:10.1364/AO.17.000379
+3. Lyzenga, D.R., Malinas, N.P., Tanis, F.J., 2006. Multispectral bathymetry using a simple physically based algorithm. Geoscience and Remote Sensing, IEEE Transactions on 44, 2251 –2259. doi:10.1109/TGRS.2006.872909
+4. Sagawa, T., Boisnier, E., Komatsu, T., Mustapha, K.B., Hattour, A., Kosaka, N., Miyazaki, S., 2010. Using bottom surface reflectance to map coastal marine areas: a new application method for Lyzenga’s model. International Journal of Remote Sensing 31, 3051–3064. doi:10.1080/01431160903154341
 
