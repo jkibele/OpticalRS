@@ -9,7 +9,7 @@
         
         <link rel="shortcut icon" href="../img/favicon.ico">
 
-	<title>Installation - OpticalRS</title>
+	<title>Python API - OpticalRS</title>
 
         <link href="../css/bootstrap-3.0.3.min.css" rel="stylesheet">
         <link href="../css/font-awesome-4.0.3.css" rel="stylesheet">
@@ -56,13 +56,13 @@
             
             
             
-                <li class="active">
-                    <a href="./">Installation</a>
+                <li >
+                    <a href="../installation/">Installation</a>
                 </li>
             
             
             
-                <li class="dropdown">
+                <li class="dropdown active">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
@@ -70,8 +70,8 @@
                             <a href="../gettingstarted/">Getting Started</a>
                         </li>
                     
-                        <li >
-                            <a href="../pythonapi/">Python API</a>
+                        <li class="active">
+                            <a href="./">Python API</a>
                         </li>
                     
                         <li >
@@ -87,12 +87,12 @@
             <!-- Search, Navigation and Repo links -->
             <ul class="nav navbar-nav navbar-right">
                 <li >
-                    <a rel="next" href="..">
+                    <a rel="next" href="../gettingstarted/">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="../gettingstarted/">
+                    <a rel="prev" href="../qgisprocessing/">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -115,58 +115,11 @@
             <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
-        <li class="main active"><a href="#installation">Installation</a></li>
-        
-            <li><a href="#dependencies">Dependencies</a></li>
-        
-            <li><a href="#intallation-on-ubuntu">Intallation on Ubuntu</a></li>
-        
-    
     </ul>
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="installation">Installation</h1>
-<p>OpticalRS was developed under the Ubuntu operating system but should run on Windows and Mac as well. Methods for installing dependencies will vary by operating system but, once the dependencies are installed, installation of OpticalRS can be accomplished with the following command on any OS:</p>
-<pre><code>$ pip install OpticalRS
-</code></pre>
-<p>On systems where the user has insufficient permissions, you may need to run the installation as root by using:</p>
-<pre><code>$ sudo pip install OpticalRS
-</code></pre>
-<h2 id="dependencies">Dependencies</h2>
-<p>Many of the dependencies (numpy, scipy, matplotlib, and pandas) are taken care of if you install the <a href="http://scipy.org/">scipy</a> stack (instructions <a href="http://www.scipy.org/install.html">here</a> so it makes sense to do scipy first. The installation methods will vary depending on the operating system. Installation instructions can be found on the links below. The following are required for OpticalRS to install and run correctly:</p>
-<ul>
-<li><a href="http://www.numpy.org/">numpy</a></li>
-<li><a href="http://matplotlib.org/">matplotlib</a></li>
-<li><a href="http://scipy.org/">scipy</a></li>
-<li><a href="http://pandas.pydata.org/">pandas</a></li>
-<li><a href="http://statsmodels.sourceforge.net/">statsmodels</a></li>
-<li><a href="http://scikit-image.org/">scikit-image</a></li>
-<li><a href="https://pypi.python.org/pypi/GDAL/">GDAL</a></li>
-<li><a href="http://geopandas.org/">geopandas</a></li>
-<li><a href="https://github.com/perrygeo/python-rasterstats">rasterstats</a></li>
-</ul>
-<h2 id="intallation-on-ubuntu">Intallation on Ubuntu</h2>
-<p>The following shell script can be used to install OpticalRS and all of its dependencies on Ubuntu. This script is available from the <a href="https://github.com/jkibele/OpticalRS">OpticalRS Repository</a> as <code>install_with_dependencies.sh</code>. You can either run the script or just copy and paste the commands to the command line one at a time (in the correct order). The result will be the same either way.</p>
-<pre><code>#!/bin/sh
-# This script has been tested (a bit) on Ubuntu 14.04
-
-# This adds the repository for the gdal stuff (the last apt-get line)
-sudo add-apt-repository ppa:ubuntugis/ppa -y
-sudo apt-get update
-
-# Install Scipy stack. Instructions here: http://www.scipy.org/install.html
-sudo apt-get install -y python-numpy python-scipy python-matplotlib ipython ipython-notebook python-pandas python-sympy python-nose
-
-# This is needed for the last line that actually installs OpticalRS (and a few dependencies handled by pip)
-sudo apt-get install -y python-pip
-
-# gdal libraries are required by some of the python requirements installed by pip
-sudo apt-get install -y python-gdal libgdal1h gdal-bin libgdal-dev
-
-# This finishes up the dependencies and finally the actual OpticalRS code 
-sudo pip install OpticalRS
-</code></pre></div>
+</div>
         </div>
 
 	<footer class="col-md-12">
