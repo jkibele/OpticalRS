@@ -17,11 +17,9 @@ def connectivity_filter(in_array,threshold=1000,structure=None):
     ----------
     in_array : numpy array
         A 2D binary array.
-    
     threshold : int (optional, default=1000)
         The minimum count for connected 1s. If there are fewer than this many
         1s in a given clump, they'll all be turned to 0s in the output.
-        
     structure : numpy array (optional)
         A structuring element that defines feature connections. structure must 
         be symmetric. If no structuring element is provided, one is 
@@ -83,11 +81,9 @@ def two_way_connectivity_filter( in_array, threshold=1000, structure=None):
     ----------
     in_array : numpy array
         A 2D array that can be converted to boolean.
-    
     threshold : int (optional, default=1000)
         The minimum count for connected 1s. If there are fewer than this many
         1s in a given clump, they'll all be turned to 0s in the output.
-        
     structure : numpy array (optional)
         A structuring element that defines feature connections. structure must 
         be symmetric. If no structuring element is provided, one is 
@@ -139,7 +135,6 @@ def simple_land_mask(in_arr,threshold=50):
     in_arr : numpy.array 
         An array of shape (Rows,Columns). Should be a NIR band. For WorldView-2
         imagery, I use band 8 (NIR2).
-    
     threshold : int or float
         The pixel value cut-off. Pixels with a value lower than this will be 
         considered water and be marked as 1 in the output.
@@ -174,14 +169,12 @@ def mask_land(imarr, nir_threshold=100, conn_threshold=1000, structure=None):
     imarr : numpy.array
         An array of shape (Rows,Columns,Bands). The multipectral image you wish
         to mask.
-    
     nir_threshold : int or float (optional, default=100)
         The pixel value cut-off. Pixels with a value lower than this will be 
         considered water and be left unmasked. Pixels with a value above will
         be considered land and will be masked. In practice, you can determine
         this value by looking at a histogram of NIR values or examining pixel
         NIR values on water and land.
-        
     conn_threshold : int
         Groups of unmasked pixels connected to fewer than this number of other
         unmasked pixels will be masked.

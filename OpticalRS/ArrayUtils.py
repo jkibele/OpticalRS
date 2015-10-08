@@ -77,7 +77,6 @@ def band_percentiles( imarr, p=10 ):
         An 3 dimensional array (RxCxN) where the third dimension (N) is the
         number of bands. If imarr is masked, then only unmasked values will be
         considered.
-
     p : float in range [0,100] (or sequence of floats)
         Percentile to compute which must be between 0 and 100 inclusive.
 
@@ -110,12 +109,10 @@ def mask3D_with_2D( imarr, mask, keep_old_mask=True ):
     imarr : numpy array or masked array
         An 3 dimensional array (RxCxN) where the third dimension (N) is the
         number of bands.
-
     mask : numpy array
         A 2 dimensional array (RxC) of the same shape as the first 2 dimensions
         of imarr. This mask will be repeated N times and applied to `imarr`.
         `mask` must be able to be converted to boolean dtype.
-
     keep_old_mask : bool (default: True)
         If False, any existing mask for imarr will be discarded and `mask` will
         be the only mask of the output. If True (default), the output mask
@@ -184,14 +181,11 @@ def each_band_unmasked( imarr, funct, *args, **kwargs ):
     imarr : numpy array
         An 3 dimensional array (RxCxN) where the third dimension (N) is the
         number of bands.
-        
     funct : function
         The function to apply to each band. It must take an array as input and
         return an array.
-        
     *args : various
         Arguments to be supplied to to `funct`.
-        
     **kwargs :
         Keyword arguments to be supplied to `funct`.
         
@@ -218,14 +212,11 @@ def each_band_masked( imarr, funct, *args, **kwargs ):
     imarr : numpy masked array
         An 3 dimensional array (RxCxN) where the third dimension (N) is the
         number of bands.
-        
     funct : function
         The function to apply to each band. It must take an array as input and
         return an array.
-        
     *args : various
         Arguments to be supplied to to `funct`.
-        
     **kwargs :
         Keyword arguments to be supplied to `funct`.
         
@@ -262,14 +253,11 @@ def each_band( imarr, funct, *args, **kwargs ):
     imarr : numpy array
         An 3 dimensional array (RxCxN) where the third dimension (N) is the
         number of bands.
-        
     funct : function
         The function to apply to each band. It must take an array as input and
         return an array.
-        
     *args : various
         Arguments to be supplied to to `funct`.
-        
     **kwargs :
         Keyword arguments to be supplied to `funct`.
         

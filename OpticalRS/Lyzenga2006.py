@@ -41,7 +41,6 @@ def dark_pixels( imarr, p=10 ):
     ----------
     imarr : numpy array (RxCxBands shape)
         The multispectral image array. See `OpticalRS.RasterDS` for more info.
-        
     p : int or float (Default value = 10)
         The percentile of brightness to use as the threshold for declaring a
         pixel 'dark'. Lyzenga et al. 2006 used the 10th percnetile so that's 
@@ -72,7 +71,6 @@ def moving_window( dark_arr, win_size=3 ):
     dark_arr : boolean array
         This is an (RxCx1) array of pixels that are considered dark. The 
         `dark_pixels` method in this module can be used to create this array.
-        
     win_size : int (Default value = 3)
         The size of the moving window to be used. Lyzenga et al. 2006 uses a 
         3x3 window so the default is 3.
@@ -107,16 +105,13 @@ def dark_kernels( imarr, p=10, win_size=3, win_percentage=50 ):
     ----------
     imarr : numpy array (RxCxBands shape)
         The multispectral image array. See `OpticalRS.RasterDS` for more info.
-        
     p : int or float (Default value = 10)
         The percentile of brightness to use as the threshold for declaring a
         pixel 'dark'. Lyzenga et al. 2006 used the 10th percnetile so that's 
         the default.
-        
     win_size : int (Default value = 3)
         The size of the moving window to be used. Lyzenga et al. 2006 uses a 
         3x3 window so the default is 3.
-        
     win_percentage : int or float (Default value = 50)
         The percentage of the moving window that must be at or below the 
         threshold. Lyzenga et al. 2006 used 50% so that's the default.
@@ -141,16 +136,13 @@ def dark_pixel_array( imarr, p=10, win_size=3, win_percentage=50 ):
     ----------
     imarr : numpy array (RxCxBands shape)
         The multispectral image array. See `OpticalRS.RasterDS` for more info.
-        
     p : int or float (Default value = 10)
         The percentile of brightness to use as the threshold for declaring a
         pixel 'dark'. Lyzenga et al. 2006 used the 10th percnetile so that's 
         the default.
-        
     win_size : int (Default value = 3)
         The size of the moving window to be used. Lyzenga et al. 2006 uses a 
         3x3 window so the default is 3.
-        
     win_percentage : int or float (Default value = 50)
         The percentage of the moving window that must be at or below the 
         threshold. Lyzenga et al. 2006 used 50% so that's the default.
@@ -182,7 +174,6 @@ def bg_thresholds( dark_arr, n_std=3 ):
     ----------
     dark_arr : numpy Masked Array
         Typically, this will be the output of `Lyzenga2006.dark_pixels_array`.
-        
     n_std : int (Default value = 3)
         The number of standard deviations to add to the mean. Lyzenga et al. 
         2006 uses 3 so that's the default.
@@ -212,7 +203,6 @@ def nir_mean(msarr,nir_band=7):
     ----------
     msarr : numpy array (RxCxBands shape)
         The multispectral image array. See `OpticalRS.RasterDS` for more info.
-        
     nir_band : int (Default value = 7)
         The default `nir_band` value of 7 selects the NIR2 band in WorldView-2 
         imagery. If you're working with a different type of imagery, you will 
@@ -234,10 +224,8 @@ def cov_ratio(msarr,band,nir_band=7):
     ----------
     msarr : numpy array (RxCxBands shape)
         The multispectral image array. See `OpticalRS.RasterDS` for more info.
-        
     band : int
         The band to calculate r_ij for. Essentially, the value i in equation 5.
-        
     nir_band : int (Default value = 7)
         The default `nir_band` value of 7 selects the NIR2 band in WorldView-2 
         imagery. If you're working with a different type of imagery, you will 
@@ -268,7 +256,6 @@ def cov_ratios(msarr,nir_band=7):
     ----------
     msarr : numpy array (RxCxBands shape)
         The multispectral image array. See `OpticalRS.RasterDS` for more info.
-        
     nir_band : int (Default value = 7)
         The default `nir_band` value of 7 selects the NIR2 band in WorldView-2 
         imagery. If you're working with a different type of imagery, you will 
@@ -294,29 +281,13 @@ def glint_correct_image(imarr, glintarr, nir_band=7):
     """
     Apply the sunglint removal algorithm from section III of Lyzenga et al. 
     2006 to a multispectral image array.
-    
-    
-    Note
-    ----
-    This deglinting method may not work well on WorldView-2 imagery because the
-    bands are not captured exactly concurrently. See section II B of Eugenio et
-    al. 2015 for more information and a different sunglint correction algorithm
-    that may be more appropriate.
-    
-    Eugenio, F., Marcello, J., Martin, J., 2015. High-Resolution Maps of 
-    Bathymetry and Benthic Habitats in Shallow-Water Environments Using 
-    Multispectral Remote Sensing Imagery. IEEE Transactions on Geoscience and 
-    Remote Sensing 53, 3539–3549. doi:10.1109/TGRS.2014.2377300
-
 
     Parameters
     ----------
     imarr : numpy array (RxCxBands shape)
         The multispectral image array. See `OpticalRS.RasterDS` for more info.
-        
     glintarr : numpy array
         A subset of `imarr` from an optically deep location with sun glint.
-        
     nir_band : int (Default value = 7)
         The default `nir_band` value of 7 selects the NIR2 band in WorldView-2 
         imagery. If you're working with a different type of imagery, you will 
@@ -327,6 +298,20 @@ def glint_correct_image(imarr, glintarr, nir_band=7):
     -------
     numpy array
         A de-glinted copy of `imarr`.
+        
+    Notes
+    -----
+    This deglinting method may not work well on WorldView-2 imagery because the
+    bands are not captured exactly concurrently. See section II B of Eugenio et
+    al. 2015 [1]_ for more information and a different sunglint correction 
+    algorithm that may be more appropriate.
+    
+    References
+    ----------
+    .. [1] Eugenio, F., Marcello, J., Martin, J., 2015. High-Resolution Maps of 
+       Bathymetry and Benthic Habitats in Shallow-Water Environments Using 
+       Multispectral Remote Sensing Imagery. IEEE Transactions on Geoscience 
+       and Remote Sensing 53, 3539–3549. doi:10.1109/TGRS.2014.2377300
     """
     # calculate the covariance ratios
     cov_rats = cov_ratios(glintarr,nir_band)
