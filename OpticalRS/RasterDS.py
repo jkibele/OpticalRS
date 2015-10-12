@@ -5,7 +5,7 @@ RasterDS
 
 The `RasterDS` object will provide some utilities for getting raster data sets
 into and out of numpy array formats. The main feature is the simplification of
-access to GeoTiffs as `numpy.array` format.
+reading and writing to GeoTiffs from `numpy.array` format.
 """
 
 import os,sys
@@ -265,7 +265,56 @@ def output_gtif(bandarr, cols, rows, outfilename, geotransform, projection, no_d
     """
     Create a geotiff with gdal that will contain all the bands represented
     by arrays within bandarr which is itself array of arrays. Expecting bandarr
-    to be of shape (Bands,Rows,Columns)
+    to be of shape (Bands,Rows,Columns).
+
+    Parameters
+    ----------
+    bandarr : np.array
+        Image array of shape (Rows,Cols,Bands)
+    cols : int
+        The number of columns measure in pixels. I may be able to do away with
+        this parameter by just using the shape of `bandarr` to determine this
+        value.
+    rows : int
+        The number of rows measure in pixels. I may be able to do away with this
+        parameter by just using the shape of `bandarr` to determine this value.
+    outfilename : string, optional
+        The path to the output file. If `None` (the default), then the
+        `RasterDS.output_file_path` method will be used to come up with one.
+        What it comes up with is dependent on the `RasterDS.overwrite`
+        property.
+    geotransform : tuple or list
+        The geotransform will determine how the elements of `bandarr` are
+        spatially destributed. The elements of the geotransform are as follows::
+            adfGeoTransform[0] /* top left x */
+            adfGeoTransform[1] /* w-e pixel resolution */
+            adfGeoTransform[2] /* rotation, 0 if image is "north up" */
+            adfGeoTransform[3] /* top left y */
+            adfGeoTransform[4] /* rotation, 0 if image is "north up" */
+            adfGeoTransform[5] /* n-s pixel resolution */
+    projection : string
+        The string should be a projection in OGC WKT or PROJ.4 format.
+    no_data_value : int or float, optional
+        The `no_data_value` to use in the output. If `None` or not specified
+        an attempt will be made to use the `fill_value` of `bandarr`. If
+        `bandarr` does not have a `fill_value`, the arbitrary value of -99
+        will be used.
+    driver_name : string, optional
+        The name of the GDAL driver to use. This will determine the format of
+        the output. For GeoTiff output, use the default value ('GTiff').
+    dtype : int, optional
+        If unspecified, an attempt will be made to find a GDAL datatype
+        compatible with `bandarr.dtype`. This doesn't always work. These are
+        the GDAL data types::
+            GDT_Unknown = 0, GDT_Byte = 1, GDT_UInt16 = 2, GDT_Int16 = 3,
+            GDT_UInt32 = 4, GDT_Int32 = 5, GDT_Float32 = 6, GDT_Float64 = 7,
+            GDT_CInt16 = 8, GDT_CInt32 = 9, GDT_CFloat32 = 10,
+            GDT_CFloat64 = 11, GDT_TypeCount = 12
+
+    Returns
+    -------
+    Nothing
+        This method just writes a file. It has no return.
     """
     # make sure bandarr is a proper band array
     if bandarr.ndim==2:
@@ -295,6 +344,37 @@ def output_gtif_like_img(img, bandarr, outfilename, no_data_value=-99, dtype=GDT
     """
     Create a geotiff with attributes like the one passed in but make the
     values and number of bands as in bandarr.
+
+    Parameters
+    ----------
+    img : GDAL data source
+        This is a image to use as a template for the new GeoTiff. The new image
+        will use the extent, projection, and geotransform from `img`.
+    bandarr : np.array
+        Image array of shape (Rows,Cols,Bands)
+    outfilename : string, optional
+        The path to the output file. If `None` (the default), then the
+        `RasterDS.output_file_path` method will be used to come up with one.
+        What it comes up with is dependent on the `RasterDS.overwrite`
+        property.
+    no_data_value : int or float, optional
+        The `no_data_value` to use in the output. If `None` or not specified
+        an attempt will be made to use the `fill_value` of `bandarr`. If
+        `bandarr` does not have a `fill_value`, the arbitrary value of -99
+        will be used.
+    dtype : int, optional
+        If unspecified, an attempt will be made to find a GDAL datatype
+        compatible with `bandarr.dtype`. This doesn't always work. These are
+        the GDAL data types::
+            GDT_Unknown = 0, GDT_Byte = 1, GDT_UInt16 = 2, GDT_Int16 = 3,
+            GDT_UInt32 = 4, GDT_Int32 = 5, GDT_Float32 = 6, GDT_Float64 = 7,
+            GDT_CInt16 = 8, GDT_CInt32 = 9, GDT_CFloat32 = 10,
+            GDT_CFloat64 = 11, GDT_TypeCount = 12
+
+    Returns
+    -------
+    Nothing
+        This method just writes a file. It has no return.
     """
     cols = img.RasterXSize
     rows = img.RasterYSize
