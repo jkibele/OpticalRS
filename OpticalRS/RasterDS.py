@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-The RasterDS object will provide some utilities for getting raster data sets into
-and out of numpy array formats. There'll be some other methods as well.
+RasterDS
+========
 
-Created on Fri Jun 27 14:58:13 2014
-
-@author: jkibele
+The `RasterDS` object will provide some utilities for getting raster data sets
+into and out of numpy array formats. The main feature is the simplification of
+reading and writing to GeoTiffs from `numpy.array` format.
 """
 
 import os,sys
 from osgeo import gdal, osr
-from osgeo.gdalconst import * 
+from osgeo.gdalconst import *
 from osgeo.gdal_array import NumericTypeCodeToGDALTypeCode
 import numpy as np
 from RasterSubset import masked_subset
@@ -18,8 +18,22 @@ from RasterSubset import masked_subset
 class RasterDS(object):
     """
     You can pass in a file path to any file that gdal can open or you can pass
-    in a QGIS raster layer instead. Either way, you will get back a raster 
+    in a QGIS raster layer instead. Either way, you will get back a raster
     dataset object.
+
+    Parameters
+    ----------
+    rlayer : string or QGIS raster layer
+        If string, it should be a file path to a file (e.g. a GeoTiff) that can
+        be read by `GDAL <http://gdal.org>`_. See the GDAL documentation for the
+        full list of compatible formats. A `RasterDS` can also be created from
+        a QGIS raster layer. This is useful when building `OpticalRS` based QGIS
+        processing tools and plugins or when using the Python command line in
+        QGIS.
+    overwrite : boolean, optional
+        Whether to allow overwriting of the data source file. This feature is
+        incomplete in implementation and testing so don't rely on it. Default is
+        `False`.
     """
     def __init__(self, rlayer, overwrite=False):
         self.rlayer = rlayer
@@ -31,12 +45,16 @@ class RasterDS(object):
         self.gdal_ds = self.__open_gdal_ds()
         # store the text portion of the file extension in case we need the file type
         self.file_type = os.path.splitext(self.file_path)[-1].split(os.path.extsep)[-1]
-        
+
     def __open_gdal_ds(self):
-        """return a gdal datasource object"""
+        """
+        Return a gdal datasource object. In theory, this will only be called by
+        other `RasterDS` methods. There shouldn't be a need for a user to
+        interact directly with the GDAL data source object.
+        """
         # register all of the GDAL drivers
         gdal.AllRegister()
-    
+
         # open the image
         img = gdal.Open(self.file_path, GA_ReadOnly)
         if img is None:
@@ -47,32 +65,37 @@ class RasterDS(object):
             return None
         else:
             return img
-        
+
     @property
     def band_names(self):
         """
         Return a list of strings representing names for the bands. For now, this
-        will simply be 'band1','band2','band2',... etc. At some point perhaps 
+        will simply be 'band1','band2','band2',... etc. At some point perhaps
         these names will relate to the color of the bands.
         """
         return [ 'band'+str(i) for i in range(1,self.gdal_ds.RasterCount + 1) ]
-        
+
     @property
     def projection_wkt(self):
         """
-        Return the well known text (WKT) representation of the raster's projection.
+        Return the well known text (WKT) representation of the raster's
+        projection.
         """
         return self.gdal_ds.GetProjection()
-        
+
     @property
     def epsg(self):
+        """
+        Return the EPSG code for the raster's projection.
+        """
         srs = osr.SpatialReference(wkt=self.projection_wkt)
         return int( srs.GetAttrValue('AUTHORITY',1) )
-        
+
     @property
     def output_file_path(self):
         """
-        Return a file path for output. Assume that we'll output same file extension.
+        Return a file path for output. Assume that we'll output same file
+        extension.
         """
         if self.overwrite:
             return self.file_path
@@ -89,7 +112,7 @@ class RasterDS(object):
                     new = '_%i.%s' % ( add_num, f_ext )
                     fname = fname.replace( old, new )
             return fname
-            
+
     @property
     def band_array(self):
         """
@@ -97,12 +120,30 @@ class RasterDS(object):
         If the image has a "no data value" return a masked array.
         """
         return self.band_array_subset()
-        
+
     def band_array_subset(self,xoff=0, yoff=0, win_xsize=None, win_ysize=None):
         """
         Return the image data in a numpy array of shape (Rows, Columns, Bands).
         If the image has a "no data value" return a masked array. Take a subset
-        if subset values are given.
+        if subset values are given. With default values, the whole image array
+        will be returned.
+
+        Parameters
+        ----------
+        xoff : int, optional
+            The start position in the x-axis.
+        yoff : int, optional
+            The start position in the y-axis.
+        win_xsize : int, optional
+            The number of pixels to read in the x direction.
+        win_ysize : int, optional
+            The number of pixels to read in the y direction.
+
+        Returns
+        -------
+        np.ma.MaskedArray
+            The whole image array (default) or a subset of the image array. The
+            shape of the returned array will be (Rows, Columns, Bands).
         """
         #barr = self.gdal_ds.ReadAsArray()
         #ourarr = barr.T.swapaxes(0,1)
@@ -131,24 +172,68 @@ class RasterDS(object):
         if allbands.ndim==2:
             np.expand_dims(allbands,2)
         return allbands
-        
+
     def geometry_subset(self, geom):
         """
-        Return a subset of rds band array where the extent is the bounding box 
+        Return a subset of rds band array where the extent is the bounding box
         of geom and all cells outside of geom are masked.
-                    
-        geom: shapely geometry
+
+        Parameters
+        ----------
+        geom : shapely geometry
             The polygon bounding the area of interest.
-            
-        Returns:
+
+        Returns
+        -------
+        numpy.ma.MaskedArray
             A numpy masked array of shape (Rows,Columns,Bands). Cells not within
             geom will be masked as will any values that were masked in rds.
         """
         return masked_subset(self, geom)
-        
+
     def new_image_from_array(self,bandarr,outfilename=None,dtype=None,no_data_value=None):
         """
-        Save an image like self from a band array.
+        Save an GeoTiff like `self` with data from  `bandarray`.
+
+        Notes
+        -----
+        It should, in theory, be pretty easy to modify this method so that it
+        can save in any format for which GDAL supports creation and writing. So
+        far, I've been happy with just using GeoTiff but let me know if you want
+        it to support some other format.
+
+        Parameters
+        ----------
+        bandarr : np.array
+            Image array of shape (Rows,Cols,Bands)
+        outfilename : string, optional
+            The path to the output file. If `None` (the default), then the
+            `RasterDS.output_file_path` method will be used to come up with one.
+            What it comes up with is dependent on the `RasterDS.overwrite`
+            property.
+        dtype : int, optional
+            If unspecified, an attempt will be made to find a GDAL datatype
+            compatible with `bandarr.dtype`. This doesn't always work. These are
+            the GDAL data types::
+                GDT_Unknown = 0, GDT_Byte = 1, GDT_UInt16 = 2, GDT_Int16 = 3,
+                GDT_UInt32 = 4, GDT_Int32 = 5, GDT_Float32 = 6, GDT_Float64 = 7,
+                GDT_CInt16 = 8, GDT_CInt32 = 9, GDT_CFloat32 = 10,
+                GDT_CFloat64 = 11, GDT_TypeCount = 12
+        no_data_value : int or float, optional
+            The `no_data_value` to use in the output. If `None` or not specified
+            an attempt will be made to use the `fill_value` of `bandarr`. If
+            `bandarr` does not have a `fill_value`, the arbitrary value of -99
+            will be used.
+
+        Returns
+        -------
+        RasterDS
+            The new GeoTiff will be written to disk and a `RasterDS` object will
+            be returned for that GeoTiff.
+
+        See Also
+        --------
+        output_gtif_like_img, output_gtif
         """
         if dtype==None:
             # try to translate the dtype
@@ -175,11 +260,62 @@ class RasterDS(object):
             outfilename = self.output_file_path()
         output_gtif_like_img(self.gdal_ds, bandarr, outfilename, no_data_value=no_data_value, dtype=dtype)
         return RasterDS(outfilename)
-        
+
 def output_gtif(bandarr, cols, rows, outfilename, geotransform, projection, no_data_value=-99, driver_name='GTiff', dtype=GDT_Float32):
-    """Create a geotiff with gdal that will contain all the bands represented
+    """
+    Create a geotiff with gdal that will contain all the bands represented
     by arrays within bandarr which is itself array of arrays. Expecting bandarr
-    to be of shape (Bands,Rows,Columns)"""
+    to be of shape (Bands,Rows,Columns).
+
+    Parameters
+    ----------
+    bandarr : np.array
+        Image array of shape (Rows,Cols,Bands)
+    cols : int
+        The number of columns measure in pixels. I may be able to do away with
+        this parameter by just using the shape of `bandarr` to determine this
+        value.
+    rows : int
+        The number of rows measure in pixels. I may be able to do away with this
+        parameter by just using the shape of `bandarr` to determine this value.
+    outfilename : string, optional
+        The path to the output file. If `None` (the default), then the
+        `RasterDS.output_file_path` method will be used to come up with one.
+        What it comes up with is dependent on the `RasterDS.overwrite`
+        property.
+    geotransform : tuple or list
+        The geotransform will determine how the elements of `bandarr` are
+        spatially destributed. The elements of the geotransform are as follows::
+            adfGeoTransform[0] /* top left x */
+            adfGeoTransform[1] /* w-e pixel resolution */
+            adfGeoTransform[2] /* rotation, 0 if image is "north up" */
+            adfGeoTransform[3] /* top left y */
+            adfGeoTransform[4] /* rotation, 0 if image is "north up" */
+            adfGeoTransform[5] /* n-s pixel resolution */
+    projection : string
+        The string should be a projection in OGC WKT or PROJ.4 format.
+    no_data_value : int or float, optional
+        The `no_data_value` to use in the output. If `None` or not specified
+        an attempt will be made to use the `fill_value` of `bandarr`. If
+        `bandarr` does not have a `fill_value`, the arbitrary value of -99
+        will be used.
+    driver_name : string, optional
+        The name of the GDAL driver to use. This will determine the format of
+        the output. For GeoTiff output, use the default value ('GTiff').
+    dtype : int, optional
+        If unspecified, an attempt will be made to find a GDAL datatype
+        compatible with `bandarr.dtype`. This doesn't always work. These are
+        the GDAL data types::
+            GDT_Unknown = 0, GDT_Byte = 1, GDT_UInt16 = 2, GDT_Int16 = 3,
+            GDT_UInt32 = 4, GDT_Int32 = 5, GDT_Float32 = 6, GDT_Float64 = 7,
+            GDT_CInt16 = 8, GDT_CInt32 = 9, GDT_CFloat32 = 10,
+            GDT_CFloat64 = 11, GDT_TypeCount = 12
+
+    Returns
+    -------
+    Nothing
+        This method just writes a file. It has no return.
+    """
     # make sure bandarr is a proper band array
     if bandarr.ndim==2:
         bandarr = np.array([ bandarr ])
@@ -195,7 +331,7 @@ def output_gtif(bandarr, cols, rows, outfilename, geotransform, projection, no_d
         outBand.WriteArray(bandarr[bandnum - 1])
         outBand.FlushCache()
         outBand.SetNoDataValue(no_data_value)
-        
+
     # georeference the image and set the projection
     outDs.SetGeoTransform(geotransform)
     outDs.SetProjection(projection)
@@ -203,10 +339,43 @@ def output_gtif(bandarr, cols, rows, outfilename, geotransform, projection, no_d
     # build pyramids
     gdal.SetConfigOption('HFA_USE_RRD', 'YES')
     outDs.BuildOverviews(overviewlist=[2,4,8,16,32,64,128])
-    
+
 def output_gtif_like_img(img, bandarr, outfilename, no_data_value=-99, dtype=GDT_Float32):
-    """Create a geotiff with attributes like the one passed in but make the
-    values and number of bands as in bandarr."""
+    """
+    Create a geotiff with attributes like the one passed in but make the
+    values and number of bands as in bandarr.
+
+    Parameters
+    ----------
+    img : GDAL data source
+        This is a image to use as a template for the new GeoTiff. The new image
+        will use the extent, projection, and geotransform from `img`.
+    bandarr : np.array
+        Image array of shape (Rows,Cols,Bands)
+    outfilename : string, optional
+        The path to the output file. If `None` (the default), then the
+        `RasterDS.output_file_path` method will be used to come up with one.
+        What it comes up with is dependent on the `RasterDS.overwrite`
+        property.
+    no_data_value : int or float, optional
+        The `no_data_value` to use in the output. If `None` or not specified
+        an attempt will be made to use the `fill_value` of `bandarr`. If
+        `bandarr` does not have a `fill_value`, the arbitrary value of -99
+        will be used.
+    dtype : int, optional
+        If unspecified, an attempt will be made to find a GDAL datatype
+        compatible with `bandarr.dtype`. This doesn't always work. These are
+        the GDAL data types::
+            GDT_Unknown = 0, GDT_Byte = 1, GDT_UInt16 = 2, GDT_Int16 = 3,
+            GDT_UInt32 = 4, GDT_Int32 = 5, GDT_Float32 = 6, GDT_Float64 = 7,
+            GDT_CInt16 = 8, GDT_CInt32 = 9, GDT_CFloat32 = 10,
+            GDT_CFloat64 = 11, GDT_TypeCount = 12
+
+    Returns
+    -------
+    Nothing
+        This method just writes a file. It has no return.
+    """
     cols = img.RasterXSize
     rows = img.RasterYSize
     geotransform = img.GetGeoTransform()

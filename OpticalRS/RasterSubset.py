@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Feb 17 15:20:39 2015
+RasterSubset
+============
+
 These are methods for subsetting a raster to get just the cells within a vector
 geometry.  Much of this code is derived from the python rasterstats package
-(https://github.com/perrygeo/python-raster-stats) and is dependent on some 
-utilities from that package. 
-
-@author: jkibele
+(https://github.com/perrygeo/python-raster-stats) and is dependent on some
+utilities from that package. I think this code could be rewritten to remove the
+dependency on having rasterstats installed but I'm not sure when I'll get around
+to that.
 """
 #import numpy as np
 from osgeo import gdal, ogr, osr
@@ -15,11 +17,18 @@ from rasterstats.utils import bbox_to_pixel_offsets, shapely_to_ogr_type
 def mask_from_geom( geom, rds, band_num=1, epsg=32760, nodata_value=None, all_touched=False ):
     """
     Return a binary mask to mask off everything outside of geom.
-    
-    geom: shapely.geometry
-    
-    rds: RasterDS
-    
+
+    Parameters
+    ----------
+    geom : shapely.geometry
+        Cells inside this geometry will be `False`. Cells outside will be `True`
+    rds : RasterDS
+        The raster dataset to create a mask for.
+
+    Returns
+    -------
+    numpy boolean array
+        An array with `True` outside `geom` and `False` inside.
     """
     spatial_ref = osr.SpatialReference()
     spatial_ref.ImportFromEPSG(epsg)
@@ -38,7 +47,7 @@ def mask_from_geom( geom, rds, band_num=1, epsg=32760, nodata_value=None, all_to
     # convert them into box polygons the size of a raster cell
 #    buff = rgt[1] / 2.0
 #    if geom.type == "MultiPoint":
-#        geom = MultiPolygon([box(*(pt.buffer(buff).bounds)) 
+#        geom = MultiPolygon([box(*(pt.buffer(buff).bounds))
 #                            for pt in geom.geoms])
 #    elif geom.type == 'Point':
 #        geom = box(*(geom.buffer(buff).bounds))
@@ -102,19 +111,22 @@ def mask_from_geom( geom, rds, band_num=1, epsg=32760, nodata_value=None, all_to
 #         return masked
 #         return np.logical_or( src_array == nodata_value, np.logical_not( rv_array ) )
         return ~rv_array.astype('bool')
-        
+
 def masked_subset( rds, geom, all_touched=False ):
     """
     Return a subset of rds where the extent is the bounding box of geom and all
     cells outside of geom are masked.
-    
-    rds: OpticalRS.RasterDS
+
+    Parameters
+    ----------
+    rds : OpticalRS.RasterDS
         The raster dataset that you want to subset
-        
-    geom: shapely geometry
+    geom : shapely geometry
         The polygon bounding the area of interest.
-        
-    Returns:
+
+    Returns
+    -------
+    numpy.ma.MaskedArray
         A numpy masked array of shape (Rows,Columns,Bands). Cells not within
         geom will be masked as will any values that were masked in rds.
     """
@@ -129,11 +141,11 @@ def masked_subset( rds, geom, all_touched=False ):
     epsg = rds.epsg
     rb = rds.gdal_ds.GetRasterBand(1)
     nodata_value = rb.GetNoDataValue()
-    
+
     geom_mask = mask_from_geom( geom, rds, band_num=band_num, epsg=epsg, \
                                 nodata_value=nodata_value, all_touched=all_touched )
-    
+
     for bn in range( nbands ):
         barr[:,:,bn].mask = barr[:,:,bn].mask | geom_mask
-    
+
     return barr
