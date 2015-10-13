@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """
+ArrayUtils
+==========
+
 This module contains functions that are applied to numpy array representations
 of images. Unless stated otherwise, image arrays are expected to be of shape
 (RowsxColumnsxN) where N is the number of bands.

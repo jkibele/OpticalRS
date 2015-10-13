@@ -1,11 +1,19 @@
 site_name: OpticalRS
+
 repo_url: https://github.com/jkibele/OpticalRS
+
 site_author: Jared Kibele
+
 pages:
 - Home: index.md
 - Installation: installation.md
-- User Guide:
-    - 'Getting Started': gettingstarted.md
-    - 'Python API': pythonapi.md
-    - 'QGIS Processing Tools': qgisprocessing.md
+- User Guide: userguide.md
+
 theme: bootstrap
+
+extra_javascript:
+    - http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML
+
+markdown_extensions:
+    - mdx_math:
+        enable_dollar_delimiter: True

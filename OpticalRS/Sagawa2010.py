@@ -13,19 +13,21 @@ implementing this method.
 Notes
 -----
 Sagawa's starting place is equation 1 from Lyzenga 1978 [2]_, rewritten as (just
-the symbols have been changed)::
+the symbols have been changed):
 
 .. math:: L_i = L_{si} + a_i r_i e^{-K_igZ}
 
 :math:`Z` is the depth and :math:`g` is some a geometric constant. Sagawa's
 reflectance index is described as (equation 4, Sagawa et al. 2010):
 
-.. math:: Index_i = \frac{ L_i - L_{si} }{ e^{-K_i g Z} }
+.. math::
+
+    Index_i = \\frac{ L_i - L_{si} }{ e^{-K_i g Z} }
 
 for each band :math:`i`.
 
 I know how to calculate all of those terms except for :math:`K_i` and :math:`g`.
-I know how to get :math:`\frac{ K_i }{ K_j }` (see
+I know how to get :math:`\\frac{ K_i }{ K_j }` (see
 `Lyzenga1981.attenuation_coef_ratio`) but not just :math:`K_i`. However, Sagawa
 offers this statement::
     "Using sea truth data, we plotted satellite data against depth for sandy

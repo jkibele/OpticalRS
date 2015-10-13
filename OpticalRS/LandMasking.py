@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jul 14 16:28:57 2014
+LandMasking
+===========
+
 This code also shows up in the Multispectral Land Masker QGIS plugin:
 https://github.com/jkibele/LandMasker.
-@author: jkibele
 """
 import numpy as np
 from scipy.ndimage.measurements import label
