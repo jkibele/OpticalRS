@@ -4,8 +4,8 @@ RasterSubset
 ============
 
 These are methods for subsetting a raster to get just the cells within a vector
-geometry.  Much of this code is derived from the python rasterstats package
-(https://github.com/perrygeo/python-raster-stats) and is dependent on some
+geometry.  Much of this code is derived from the python `rasterstats package
+<https://github.com/perrygeo/python-raster-stats>`_ and is dependent on some
 utilities from that package. I think this code could be rewritten to remove the
 dependency on having rasterstats installed but I'm not sure when I'll get around
 to that.

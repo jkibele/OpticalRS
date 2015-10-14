@@ -8,8 +8,6 @@ proposed. Sagawa's reflectance index incorporates depth measurements in an
 attempt to correct for water column attenuation. This code is my attempt at
 implementing this method.
 
-
-
 Notes
 -----
 Sagawa's starting place is equation 1 from Lyzenga 1978 [2]_, rewritten as (just
