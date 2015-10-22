@@ -30,7 +30,76 @@ out.
 from xml.etree.ElementTree import ElementTree as ET
 from collections import OrderedDict
 from datetime import datetime
-from common import *
+from osgeo import gdal
+from osgeo.gdalconst import *
+import argparse, os, sys
+import numpy as np
+
+## Raster handling #########################################
+# I'll want to integrate this module with the rest of OpticalRS by using the
+# RasterDS module to do this stuff. For now, I'm doing it this way. ...this does
+# have the benefit of making this a stand alone module relying only on the gdal
+# import.
+
+def open_raster(filename):
+    """Take a file path as a string and return a gdal datasource object"""
+    # register all of the GDAL drivers
+    gdal.AllRegister()
+
+    # open the image
+    img = gdal.Open(filename, GA_ReadOnly)
+    if img is None:
+        print 'Could not open %s' % filename
+        sys.exit(1)
+    else:
+        return img
+
+def bandarr_from_ds(img):
+    """Take a raster datasource and return a band array. Each band is read
+    as an array and becomes one element of the band array."""
+    for band in range(1,img.RasterCount + 1):
+        barr = img.GetRasterBand(band).ReadAsArray()
+        if band==1:
+            bandarr = np.array([barr])
+        else:
+            bandarr = np.append(bandarr,[barr],axis=0)
+    return bandarr
+
+def output_gtif(bandarr, cols, rows, outfilename, geotransform, projection, no_data_value=-99, driver_name='GTiff', dtype=GDT_Float32):
+    """Create a geotiff with gdal that will contain all the bands represented
+    by arrays within bandarr which is itself array of arrays."""
+    # make sure bandarr is a proper band array
+    if len( bandarr.shape )==2:
+        bandarr = np.array([ bandarr ])
+    driver = gdal.GetDriverByName(driver_name)
+    outDs = driver.Create(outfilename, cols, rows, len(bandarr), dtype)
+    if outDs is None:
+        print "Could not create %s" % outfilename
+        sys.exit(1)
+    for bandnum in range(1,len(bandarr) + 1):  # bandarr is zero based index while GetRasterBand is 1 based index
+        outBand = outDs.GetRasterBand(bandnum)
+        outBand.WriteArray(bandarr[bandnum - 1])
+        outBand.FlushCache()
+        outBand.SetNoDataValue(no_data_value)
+
+    # georeference the image and set the projection
+    outDs.SetGeoTransform(geotransform)
+    outDs.SetProjection(projection)
+
+    # build pyramids
+    gdal.SetConfigOption('HFA_USE_RRD', 'YES')
+    outDs.BuildOverviews(overviewlist=[2,4,8,16,32,64,128])
+
+def output_gtif_like_img(img, bandarr, outfilename, no_data_value=-99, dtype=GDT_Float32):
+    """Create a geotiff with attributes like the one passed in but make the
+    values and number of bands as in bandarr."""
+    cols = img.RasterXSize
+    rows = img.RasterYSize
+    geotransform = img.GetGeoTransform()
+    projection = img.GetProjection()
+    output_gtif(bandarr, cols, rows, outfilename, geotransform, projection, no_data_value, driver_name='GTiff', dtype=dtype)
+
+## End of Raster Handling stuff ################################################
 
 """I have to make a dictionary of Band-Averaged Solar Spectral Irradiance because
 DigitalGlobe apparently could not be bothered to include these values in the xml.
