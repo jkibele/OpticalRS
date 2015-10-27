@@ -5,7 +5,8 @@ Multispectral Exposure
 
 This module contains **POORLY TESTED** methods for adjusting the exposure of
 multispectral images. Unless otherwise stated methods will expect image arrays
-in the shape of (Rows,Columns,Bands).
+in the shape of (Rows,Columns,Bands). These methods should be considered
+expirimental at this point.
 
 Most (if not all) of these methods will be based on scikit-image exposure
 methods. These methods can't be used directly (for my purposes) because they do
@@ -16,9 +17,6 @@ methods that base calculations only on unmasked pixels.
 I often need to apply exposure methods to many individual bands. Most of the
 scikit-image methods expect single band or RGB array. The methods in this
 module will apply to an arbitrary number of bands.
-
-Created on Tue Jan 27 15:16:10 2015
-@author: jkibele
 """
 
 import numpy as np

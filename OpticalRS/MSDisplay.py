@@ -3,10 +3,8 @@
 Multispectral Display
 =====================
 
-Methods for displaying multispectral images and information about them.
-
-Created on Tue Jan 27 15:39:55 2015
-@author: jkibele
+Methods for displaying multispectral images and information about them. I've
+found these methods useful when exploring images.
 """
 
 import numpy as np
@@ -20,7 +18,7 @@ def multiband_histogram( img, nbins=256, figwidth=14 ):
     Parameters
     ----------
     img : numpy.array
-        This is the image array of shape (Rows,Cols,Bands)        
+        This is the image array of shape (Rows,Cols,Bands)
     nbins : int
         The number of bins to use in the histograms. (Default value = 256)
     figwidth :
@@ -30,7 +28,7 @@ def multiband_histogram( img, nbins=256, figwidth=14 ):
     Returns
     -------
     Nothing
-        This method dispalys a plot. Exactly how the plot is displayed is 
+        This method dispalys a plot. Exactly how the plot is displayed is
         determined by your matplotlib settings.
     """
     imshp = img.shape
@@ -54,7 +52,7 @@ def multiband_histogram( img, nbins=256, figwidth=14 ):
         counts, bins = np.histogram( pixvalues,bins=nbins,normed=False )
         cdf = np.cumsum( counts )
         ax.twinx().plot( bins[1:], cdf, color='r', alpha=0.8 )
-        
+
 def view_bands( img, **kwargs ):
     """
     Plot each band as a separate single band subplot.
@@ -62,7 +60,7 @@ def view_bands( img, **kwargs ):
     Parameters
     ----------
     img : numpy.array
-        This is the image array of shape (Rows,Cols,Bands)        
+        This is the image array of shape (Rows,Cols,Bands)
     **kwargs : keyword arguments
         This is how the keyword arguments get passed in. I'll list them below.
     ncols : int
@@ -75,12 +73,12 @@ def view_bands( img, **kwargs ):
     subset : numpy.s_
         A numpy slice object used to display a subset of the image rather than
         the whole thing.
-        
+
 
     Returns
     -------
     Nothing
-        This method dispalys a plot. Exactly how the plot is displayed is 
+        This method dispalys a plot. Exactly how the plot is displayed is
         determined by your matplotlib settings.
     """
     nbands = img.shape[-1]
@@ -96,4 +94,3 @@ def view_bands( img, **kwargs ):
         ax.set_title(axtit)
         ax.imshow( barr[subset].squeeze(), cmap=cmap )
         ax.axis('off')
-    

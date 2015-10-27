@@ -1,16 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-This module is a part of the OpticalRS library. It implements methods described
-in Lyzenga 1978. This implementation is the work of the author of this
-code (Jared Kibele), not the author of the original paper. I tried to get it 
-right but I'm not making any promises. Please check your results and let me 
-know if you find any problems.
+Lyzenga1978
+===========
+
+This module implements some of the methods described in Lyzenga 1978. These
+methods are used in depth estimation from multispectral imagery and in water
+column correction for bottom type classification.
 
 The methods in this module are mostly derived from Appendix B of Lyzenga 1978.
-It's pretty unlikely that anything in this module will make any sense to you if 
+It's pretty unlikely that anything in this module will make any sense to you if
 you don't read Appendix B.
 
-If you want to calculate depth-invariant indices, it would go something like 
+This implementation is the work of the author of this code (Jared Kibele), not
+the author of the original paper. I tried to get it  right but I'm not making
+any promises. Please check your results and let me  know if you find any
+problems.
+
+If you want to calculate depth-invariant indices, it would go something like
 this::
 
     >>> b = slopes(Z,X)
@@ -32,10 +38,10 @@ from statsmodels.nonparametric.smoothers_lowess import lowess
 
 def regressions(Z,X):
     """
-    Carry out the regression discussed in Appendix B of Lyzenga 1978. `Z` is 
+    Carry out the regression discussed in Appendix B of Lyzenga 1978. `Z` is
     the depths and `X` is the log radiance values. X = a - b z is the
     formula so depth is the x in the regression and radiance is the y.
-    
+
     Parameters
     ----------
     Z : np.ma.MaskedArray
@@ -45,7 +51,7 @@ def regressions(Z,X):
     X : np.ma.MaskedArray
         The array of log transformed radiance values from equation B1 of
         Lyzenga 1978.
-        
+
     Returns
     -------
     np.array
@@ -65,13 +71,13 @@ def regressions(Z,X):
         intercepts.append( intercept )
         rvals.append( r_value )
     return np.array((slopes,intercepts,rvals))
-    
+
 def slopes(Z,X):
     """
     Get the slopes from the regression of Z against X. See `regressions` doc
-    string for more information. In terms of Lyzenga 1978, the slopes are the 
+    string for more information. In terms of Lyzenga 1978, the slopes are the
     b_i values for each band.
-    
+
     Parameters
     ----------
     Z : np.ma.MaskedArray
@@ -81,19 +87,19 @@ def slopes(Z,X):
     X : np.ma.MaskedArray
         The array of log transformed radiance values from equation B1 of
         Lyzenga 1978.
-        
+
     Returns
     -------
     np.array
-        An N-bands array containing the slopes of the regressions. In terms of 
+        An N-bands array containing the slopes of the regressions. In terms of
         equation B1 from Lyzenga 1978, that's the b_i values for each band.
     """
     return regressions(Z,X)[0,:]
-    
+
 def B2(b,j):
     """
     Equation B2 from Lyzenga 1978.
-    
+
     Parameters
     ----------
     b : np.array
@@ -102,7 +108,7 @@ def B2(b,j):
         or Appendix B of Lyzenga 1978.
     j : int
         Band number.
-        
+
     Returns
     -------
     np.array
@@ -110,11 +116,11 @@ def B2(b,j):
         mean anything to you, read Appendix B of Lyzenga 1978.
     """
     return b[j] * (b**2).sum()**(-0.5)
-    
+
 def B5(b,i,j):
     """
     Equation B5 from Lyzenga 1978.
-    
+
     Parameters
     ----------
     b : np.array
@@ -125,19 +131,19 @@ def B5(b,i,j):
         Band number.
     j : int
         Band number.
-        
+
     Returns
     -------
     np.array
-        Elements of the tranformation matrix A. If that doesn't mean anything 
+        Elements of the tranformation matrix A. If that doesn't mean anything
         to you, read Appendix B of Lyzenga 1978.
     """
-    return b[i+1] * b[j] * ( (b[:i+1]**2).sum()**(-0.5) ) * ( (b[:i+2]**2).sum()**(-0.5) )  
-    
+    return b[i+1] * b[j] * ( (b[:i+1]**2).sum()**(-0.5) ) * ( (b[:i+2]**2).sum()**(-0.5) )
+
 def B6(b,i,j):
     """
     Equation B6 from Lyzenga 1978.
-    
+
     Parameters
     ----------
     b : np.array
@@ -148,27 +154,27 @@ def B6(b,i,j):
         Band number.
     j : int
         Band number.
-        
+
     Returns
     -------
     np.array
-        Elements of the tranformation matrix A. If that doesn't mean anything 
+        Elements of the tranformation matrix A. If that doesn't mean anything
         to you, read Appendix B of Lyzenga 1978.
     """
     return -1.0 * ( (b[:i+1]**2).sum()**(0.5) ) * ( (b[:i+2]**2).sum()**(-0.5) )
-    
+
 def Aij(b):
     """
     Return coordinate system rotation parameters for use in caclulating
     depth invariant index (equation 8, Lyzenga 1978).
-    
+
     Parameters
     ----------
     b : np.array
         Slopes from regressing depths against logged radiance values.
         For more info see the doc string for `Lyzenga1978.regressions`
         or Appendix B of Lyzenga 1978.
-        
+
     Returns
     -------
     np.array
@@ -189,23 +195,23 @@ def Aij(b):
             else:
                 A[i,j] = 0.0
     return A
-    
+
 def Y_i(i,A,X):
     """
-    Calculate band `i` of the coordinate rotation described in equation 8 of 
+    Calculate band `i` of the coordinate rotation described in equation 8 of
     Lyzenga 1978.
-    
+
     Parameters
     ----------
     i : int
         The band number of `Y` to calculate.
     A : np.array
-        The coordinate system rotation parameters calculated by the method 
+        The coordinate system rotation parameters calculated by the method
         `Aij` and described in Appendix B of Lyzenga 1978.
     X : np.ma.MaskedArray
         The array of log transformed radiance values from equation B1 of
         Lyzenga 1978.
-        
+
     Returns
     -------
     np.array
@@ -213,21 +219,21 @@ def Y_i(i,A,X):
         band will be depth-invariant if `i` < `N` (the number of bands).
     """
     return (A[i,:] * X[...,:]).sum(2)
-    
+
 def depth_invariant(A,X):
     """
-    Calculate N-1 depth-invariant bands and single depth dependent band by 
+    Calculate N-1 depth-invariant bands and single depth dependent band by
     coordinate rotation described in equation 8 of Lyzenga 1978.
-    
+
     Parameters
     ----------
     A : np.array
-        The coordinate system rotation parameters calculated by the method 
+        The coordinate system rotation parameters calculated by the method
         `Aij` and described in Appendix B of Lyzenga 1978.
     X : np.ma.MaskedArray
         The array of log transformed radiance values from equation B1 of
         Lyzenga 1978.
-        
+
     Returns
     -------
     np.array
@@ -239,19 +245,19 @@ def depth_invariant(A,X):
     for i in range( N ):
         Yi.append( Y_i(i,A,X) )
     return np.ma.dstack( Yi )
-    
-    
+
+
 def regression_plot(Z,X,band_names=None):
     """
     Produce a figure with a plot for each image band that displays the
     relationship between depth and radiance and gives a visual representation
     of the regression carried out in the `slopes` and `regressions` methods.
-    
+
     Notes
     -----
     This method doesn't come directly from Lyzenga 1978 but the author of this
-    code found it helpful.    
-    
+    code found it helpful.
+
     Parameters
     ----------
     Z : np.ma.MaskedArray
@@ -261,7 +267,7 @@ def regression_plot(Z,X,band_names=None):
     X : np.ma.MaskedArray
         The array of log transformed radiance values from equation B1 of
         Lyzenga 1978.
-        
+
     Returns
     -------
     Nothing
