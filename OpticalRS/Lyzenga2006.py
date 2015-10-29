@@ -26,6 +26,186 @@ I developed this in ClassificationDev/Lyzenga/Lyzenga2006/DeepWaterMasking.ipynb
 import numpy as np
 from skimage.filters import rank
 from skimage import morphology
+from sklearn.linear_model import LinearRegression
+import itertools
+from collections import OrderedDict
+
+def get_fit( ind, x_train, y_train ):
+    """
+    Get a linear regression fit object from Scikit-learn for eq. 9 from Lyzenga
+    et al. 2006.
+
+    Parameters
+    ----------
+    ind : list of integers
+        The zero-indexed band numbers to use in the linear regression.
+    x_train : np.ma.MaskedArray
+        The image array. If you're following Lyzenga et al. 2006, these will be
+        radiance values transformed according to Lyzenga 1978 eq. 7 (see Lyzenga
+        et al. 2006 eq. 8).
+    y_train : np.array or MaskedArray
+        The measured depths that correspond to the pixels in `x_train`. This
+        array must have the same dimensions as a single band of `x_train`.
+
+    Returns
+    -------
+    fit object
+        For information on this object see: http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html
+    """
+    if x_train.ndim > 2:
+        nbands = x_train.shape[-1]
+        x_train = x_train.compressed().reshape(-1,nbands)
+    skols = LinearRegression()
+    skolsfit = skols.fit(x_train[...,ind],y_train.compressed())
+    return skolsfit
+
+def get_selfscore( ind, x_train, y_train ):
+    """
+    Get the r^2 value from linear regression fit object from Scikit-learn for
+    eq. 9 from Lyzenga et al. 2006.
+
+    Parameters
+    ----------
+    ind : list of integers
+        The zero-indexed band numbers to use in the linear regression.
+    x_train : np.ma.MaskedArray
+        The image array. If you're following Lyzenga et al. 2006, these will be
+        radiance values transformed according to Lyzenga 1978 eq. 7 (see Lyzenga
+        et al. 2006 eq. 8).
+    y_train : np.array or MaskedArray
+        The measured depths that correspond to the pixels in `x_train`. This
+        array must have the same dimensions as a single band of `x_train`.
+
+    Returns
+    -------
+    float
+        The r^2 value for the linear regression.
+    """
+    if x_train.ndim > 2:
+        nbands = x_train.shape[-1]
+        x_train = x_train.compressed().reshape(-1,nbands)
+    fit = get_fit( ind, x_train, y_train )
+    return fit.score( x_train[...,ind], y_train.compressed() )
+
+def ranked_combos(x_img,y_depths,n=2):
+    """
+    Rank all possible combinations of `n` bands from `x_img` based on r^2 values
+    from eq. 9 (Lyzenga et al. 2006).
+
+    Parameters
+    ----------
+    x_img : np.array or MaskedArray
+        The image array. If you're following Lyzenga et al. 2006, these will be
+        radiance values transformed according to Lyzenga 1978 eq. 7 (see Lyzenga
+        et al. 2006 eq. 8).
+    y_depths : np.array or MaskedArray
+        The measured depths that correspond to the pixels in `x_img`. This array
+        must have the same dimensions as a single band of `x_img`.
+    n : int, optional
+        The number of bands to use in combos. This must not exceed the number of
+        bands in `x_img`.
+
+    Returns
+    -------
+    OrderedDict
+        The dict keys are the r^2 values and the dict values are the zero
+        indexed band combinations in list format. The best band combo (the one
+        with the highest r^2) will be the first item in the dict.
+    """
+    od = OrderedDict()
+    nbands = x_img.shape[-1]
+    for comb in itertools.combinations( range(nbands), n ):
+        od[ get_selfscore(comb,x_img,y_depths) ] = comb
+    od_sort = sorted( od.items(), key=lambda t: t[0], reverse=True )
+    return OrderedDict(od_sort)
+
+def best_combo(x_img,y_depths,n=2):
+    """
+    Evaluate all combinations of `n` bands from `x_img` for regression against
+    `y_depths` and return the best band combo as a tuple of zero-indexed band
+    numbers. "Best" is determined by choosing the band combo with the greatest
+    r^2 value.
+
+    Parameters
+    ----------
+    x_img : np.array or MaskedArray
+        The image array. If you're following Lyzenga et al. 2006, these will be
+        radiance values transformed according to Lyzenga 1978 eq. 7 (see Lyzenga
+        et al. 2006 eq. 8).
+    y_depths : np.array or MaskedArray
+        The measured depths that correspond to the pixels in `x_img`. This array
+        must have the same dimensions as a single band of `x_img`.
+    n : int, optional
+        The number of bands to use in combos. This must not exceed the number of
+        bands in `x_img`.
+
+    Returns
+    -------
+    tuple of ints
+        This will be the best band combo to use for depth regression. The length
+        of this tuple will be `n`.
+    """
+    return ranked_combos(x_img,y_depths,n).values()[0]
+
+def tuned_linear_model(x_img,y_depths,n=2):
+    """
+    Find the best combo of `n` bands from `x_img` and return a model tuned to
+    the training data (`x_img` and `y_depths`).
+
+    Parameters
+    ----------
+    x_img : np.array or MaskedArray
+        The image array. If you're following Lyzenga et al. 2006, these will be
+        radiance values transformed according to Lyzenga 1978 eq. 7 (see Lyzenga
+        et al. 2006 eq. 8).
+    y_depths : np.array or MaskedArray
+        The measured depths that correspond to the pixels in `x_img`. This array
+        must have the same dimensions as a single band of `x_img`.
+    n : int, optional
+        The number of bands to use in the estimation model. Must not exceed the
+        number of bands in `x_img`.
+
+    Returns
+    -------
+    fit object
+        For information on this object see:
+        http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html
+    """
+    ind = best_combo(x_img,y_depths,n)
+    return get_fit(ind,x_img,y_depths)
+
+def fit_and_predict(x_train,y_train,x_img,n=2):
+    """
+    Build Lyzenga depth estimation model trained on `x_train` (transformed
+    imagery) and `y_train` (depths) and use it to estimate depths for `x_img`.
+
+    Parameters
+    ----------
+    x_train : np.ma.MaskedArray
+        The image array subset to be used for training the model. If you're
+        following Lyzenga et al. 2006, these will be radiance values transformed
+        according to Lyzenga 1978 eq. 7 (see Lyzenga et al. 2006 eq. 8).
+    y_train : np.array or MaskedArray
+        The measured depths that correspond to the pixels in `x_train`. This
+        array must have the same dimensions as a single band of `x_train`.
+    x_img : np.array or MaskedArray
+        The image array for which you want depth estimates. Must have the same
+        dimensions and preprocessing as `x_train`.
+    n : int, optional
+        The number of bands to use in the estimation model. Must not exceed the
+        number of bands in `x_img`.
+
+    Returns
+    -------
+    np.array
+        Predicted depths for `x_img`.
+    """
+    outarr = x_img[...,0].copy()
+    ind = best_combo(x_train,y_train,n)
+    modl = get_fit(ind,x_train,y_train)
+    pred = modl.predict(x_img[...,ind].compressed().reshape(-1,n))
+    outarr[~outarr.mask] = pred
+    return outarr
 
 ## Deep water masking --------------------------------------------------------
 #   These methods are implementations of the preprocessing steps in section V

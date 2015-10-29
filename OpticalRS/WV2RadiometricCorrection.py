@@ -17,14 +17,15 @@ For usage instructions, execute::
 Notes
 =====
 
-This module gives results that are close to, but not the same as, the Orfeo
+This module gives results that are very close to, but not the same as, the Orfeo
 Toolbox [Optical Calibration
 module](https://www.orfeo-toolbox.org/CookBook/CookBooksu35.html). I think this
 may be because the OTB module is using general parameters for WV-2 imagery while
-this module is using specific parameters from the image's xml file. So, I think
-this module is working as intended. On the other hand, I really haven't
-investigated the issue. If you look into it, please let me know what you find
-out.
+this module is using specific parameters from the image's xml file. So, I am
+reasonably certain this module is working as intended. On the other hand, I
+really haven't investigated the issue. If you look into it, please let me know
+what you find out. At some point I need to do some more testing and add in much
+more thorough automated tests.
 """
 
 from xml.etree.ElementTree import ElementTree as ET
