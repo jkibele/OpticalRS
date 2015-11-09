@@ -8,7 +8,7 @@ k nearest neighbors technique.
 """
 
 from sklearn.neighbors import KNeighborsRegressor
-from OpticalRS.ArrayUtils import mask3D_with_2D
+from ArrayUtils import mask3D_with_2D
 
 def train_model(pixels,depths,k=5,weights='uniform'):
     """
