@@ -46,10 +46,10 @@ class DepthEstimator(object):
         self.k = k
         self.weights = weights
         self.imarr = self.__imarr()
-        self.nbands = self.flat_imarr.shape[-1]
+        self.nbands = self.imarr_flat.shape[-1]
         
         # Check that the numbers of pixels are compatible
-        impix = self.flat_imarr.size / self.nbands
+        impix = self.imarr_flat.size / self.nbands
         dpix = self.known_depth_arr_flat.size
         errstr = "{} image pixels and {} depth pixels. Need the same number of pixels."
         assert impix == dpix, errstr.format(impix,dpix)
@@ -99,7 +99,7 @@ class DepthEstimator(object):
             return self.known_original
             
     @property
-    def flat_imarr(self):
+    def imarr_flat(self):
         """
         Return all the image pixels in (pixels,bands) shape.
         """
@@ -126,12 +126,12 @@ class DepthEstimator(object):
         masked.
         """
         if np.ma.isMA(self.known_imarr):
-            return self.known_imarr.ravel()
+            return self.known_imarr.reshape(-1,self.nbands)
         else:
             return np.ma.masked_where(
                             np.repeat(
                             np.expand_dims(self.known_depth_arr_flat.mask,1),
-                                    self.nbands,1),self.flat_imarr)
+                                    self.nbands,1),self.imarr_flat)
     
     def knn_depth_model(self,k=5,weights='uniform'):
         return KNNDepth.train_model(self.known_imarr_flat.compressed().reshape(-1,8),
