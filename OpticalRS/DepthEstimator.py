@@ -128,12 +128,11 @@ class DepthEstimator(object):
         if np.ma.isMA(self.known_imarr):
             return self.known_imarr.reshape(-1,self.nbands)
         else:
-            return np.ma.masked_where(
-                            np.repeat(
-                            np.expand_dims(self.known_depth_arr_flat.mask,1),
-                                    self.nbands,1),self.imarr_flat)
+            mask1b = self.known_depth_arr_flat.mask
+            mask = np.repeat(np.atleast_2d(mask1b).T,self.nbands,1)
+            return np.ma.masked_where(mask,self.imarr_flat)
     
     def knn_depth_model(self,k=5,weights='uniform'):
-        return KNNDepth.train_model(self.known_imarr_flat.compressed().reshape(-1,8),
+        return KNNDepth.train_model(self.known_imarr_flat.compressed().reshape(-1,self.nbands),
                                     self.known_depth_arr_flat.compressed(),
                                     k=k,weights=weights)
