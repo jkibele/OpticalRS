@@ -11,6 +11,7 @@ from RasterDS import RasterDS
 from ArrayUtils import mask3D_with_2D
 import KNNDepth
 import numpy as np
+from sklearn.cross_validation import train_test_split
 
 class DepthEstimator(object):
     """
@@ -131,8 +132,19 @@ class DepthEstimator(object):
             mask1b = self.known_depth_arr_flat.mask
             mask = np.repeat(np.atleast_2d(mask1b).T,self.nbands,1)
             return np.ma.masked_where(mask,self.imarr_flat)
+            
+    def training_split(self,train_size=0.4,random_state=0):
+        im_train, im_test, dep_train, dep_test = train_test_split(
+                        self.known_imarr_flat, self.known_depth_arr_flat,
+                        train_size=train_size,random_state=random_state)
+        return DepthEstimator(im_train,dep_train),DepthEstimator(im_test,dep_test)
     
     def knn_depth_model(self,k=5,weights='uniform'):
+        """
+        Return a trained KNN depth model. See `OpticalRS.KNNDepth.train_model`
+        for more information. This is really just a wrapper over the
+        KNeighborsRegressor model in scikit-learn.
+        """
         return KNNDepth.train_model(self.known_imarr_flat.compressed().reshape(-1,self.nbands),
                                     self.known_depth_arr_flat.compressed(),
                                     k=k,weights=weights)

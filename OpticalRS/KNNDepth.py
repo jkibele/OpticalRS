@@ -17,7 +17,7 @@ def train_model(pixels,depths,k=5,weights='uniform'):
 
     Notes
     -----
-    This is just a thin wrapper over the KNNRegression model in scikit-learn.
+    This is just a thin wrapper over the KNeighborsRegressor model in scikit-learn.
     For more info: http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor.html#sklearn.neighbors.KNeighborsRegressor
 
     Parameters
@@ -59,7 +59,7 @@ def model_from_imarr(imarr,depths,k=5,weights='uniform'):
 
      Notes
      -----
-     This is just a wrapper over the KNNRegression model in scikit-learn.
+     This is just a wrapper over the KNeighborsRegressor model in scikit-learn.
      For more info (particularly on the `k` and `weights` params) see:
      http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor.html#sklearn.neighbors.KNeighborsRegressor
 
