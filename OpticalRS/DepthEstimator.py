@@ -134,6 +134,28 @@ class DepthEstimator(object):
             return np.ma.masked_where(mask,self.imarr_flat)
             
     def training_split(self,train_size=0.4,random_state=0):
+        """
+        Split your `DepthEstimator` into training and test subsets. This is a 
+        wrapper on the scikit-learn `cross_validation.train_test_split`. More
+        info: http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.train_test_split.html
+        
+        Parameters
+        ----------
+        train_size : float, int, or None (default is 0.4)
+            If float, should be between 0.0 and 1.0 and represent the 
+            proportion of the dataset to include in the train split. If int, 
+            represents the absolute number of train samples. If None, the value
+            is automatically set to 0.75.
+        random_state : int or RandomState
+            Pseudo-random number generator state used for random sampling.
+
+        Returns
+        -------
+        (train_DE,test_DE) : tuple of DepthEstimators
+            Two `DepthEstimator` objects made with compressed and flattened
+            arrays. Suitable for training and/or testing depth estimators but
+            not for producing images.
+        """
         im_train, im_test, dep_train, dep_test = train_test_split(
                         self.known_imarr_flat, self.known_depth_arr_flat,
                         train_size=train_size,random_state=random_state)
