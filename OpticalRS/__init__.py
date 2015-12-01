@@ -10,6 +10,8 @@ import MSExposure
 import MSDisplay
 import RasterSubset
 import ArrayUtils
+import KNNDepth
+from DepthEstimator import DepthEstimator
 
 __author__ = 'Jared Kibele'
 __email__ = 'jkibele@gmail.com'
