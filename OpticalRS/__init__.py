@@ -10,6 +10,7 @@ import MSExposure
 import MSDisplay
 import RasterSubset
 import ArrayUtils
+import AlbedoIndex
 import KNNDepth
 from DepthEstimator import DepthEstimator
 
