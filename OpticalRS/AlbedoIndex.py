@@ -43,7 +43,7 @@ def myR0(z,Rinf,Ad,g):
     I've rearranged it a bit (from eq.2, Philpot 1989) but it's equivalent.
     
     Parameters
-    ==========
+    ----------
     z : array-like
         Depth of water column.
     Rinf : float
@@ -54,7 +54,7 @@ def myR0(z,Rinf,Ad,g):
         An effective attenuation coefficient of the water.
         
     Returns
-    =======
+    -------
     R(0-) : array of floats
         Irradiance reflectance immediately below the water surface.
     """
@@ -67,7 +67,7 @@ def estRinf_g(zsand,Rsand,p0=None):
     `scipy.optimize.curve_fit`.
     
     Parameters
-    ==========
+    ----------
     zsand : array-like
         Depth of water column.
     Rsand : array-like
@@ -79,15 +79,15 @@ def estRinf_g(zsand,Rsand,p0=None):
         initial values will all be 1
         
     Returns
-    =======
+    -------
     estRinf : float
         Estimated irradiance reflectance of an optically deep water column.
     est_g : float
         Estimated effective attenuation coefficient of the water.
     """
     p, pcov = curve_fit(myR0,zsand,Rsand,p0)
-    estRinf, est_g = p[0], p[2]
-    return estRinf, est_g
+    estRinf, estAd, est_g = p
+    return estRinf, estAd, est_g
 
 def estAd(z,L,Rinf,g):
     """

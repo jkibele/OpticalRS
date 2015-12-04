@@ -12,6 +12,7 @@ import RasterSubset
 import ArrayUtils
 import AlbedoIndex
 import KNNDepth
+import GeoDFUtils
 from DepthEstimator import DepthEstimator
 
 __author__ = 'Jared Kibele'

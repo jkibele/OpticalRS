@@ -9,12 +9,11 @@ reading and writing to GeoTiffs from `numpy.array` format.
 """
 
 import os,sys
-from osgeo import gdal, osr, ogr
+from osgeo import gdal, osr
 from osgeo.gdalconst import *
 from osgeo.gdal_array import NumericTypeCodeToGDALTypeCode
 import numpy as np
 from RasterSubset import masked_subset
-import geopandas as gpd
 from shapely.geometry import Polygon as shpPoly
 
 class RasterDS(object):
@@ -140,22 +139,6 @@ class RasterDS(object):
         If the image has a "no data value" return a masked array.
         """
         return self.band_array_subset()
-        
-    def add_to_geodataframe(self, gdf, win_radius=0):
-        nbands = self.gdal_ds.RasterCount
-        winsize = 1 + win_radius * 2
-        rast_poly = self.raster_extent
-        gt = self.gdal_ds.GetGeoTransform()
-        outdf = gdf.copy()
-        meanarrlist = []
-        for i in outdf.index:
-            geom = outdf.iloc[i].geometry
-            if rast_poly.contains(geom):
-                px, py = map_to_pix(geom.x, geom.y, gt)
-                meanarr = self.band_array_subset(px-win_radius,py-win_radius,winsize,winsize).reshape(-1,nbands).mean(0)
-                meanarrlist.append(meanarr)
-        banddf = gpd.GeoDataFrame(np.array(meanarrlist), columns=self.band_names)
-        return outdf.join(banddf)
 
     def band_array_subset(self,xoff=0, yoff=0, win_xsize=None, win_ysize=None):
         """
@@ -328,66 +311,6 @@ def get_extent(gt,cols,rows):
 #            print x,y
         yarr.reverse()
     return ext
-
-def reproject_coords(coords,src_srs,tgt_srs):
-    """
-    Reproject a list of x,y coordinates. Code borrowed from:
-    http://gis.stackexchange.com/questions/57834/how-to-get-raster-corner-coordinates-using-python-gdal-bindings
-    
-    Parameters
-    ----------
-    geom : tuple or list
-        List of [[x,y],...[x,y]] coordinates
-    src_srs : osr.SpatialReference
-        OSR SpatialReference object of source
-    tgt_srs : osr.SpatialReference
-        OSR SpatialReference object target
-        
-    Returns
-    -------
-    list
-        Transformed [[x,y],...[x,y]] coordinates
-        
-    Notes
-    -----
-    Usage:
-        src_srs=osr.SpatialReference()
-        src_srs.ImportFromWkt(ds.GetProjection())
-        tgt_srs = src_srs.CloneGeogCS()
-        
-        geo_ext=ReprojectCoords(ext,src_srs,tgt_srs)
-    """
-    trans_coords=[]
-    transform = osr.CoordinateTransformation( src_srs, tgt_srs)
-    for x,y in coords:
-        x,y,z = transform.TransformPoint(x,y)
-        trans_coords.append([x,y])
-    return trans_coords
-
-def map_to_pix(x, y, gt):
-    """
-    Convert from map to pixel coordinates. Works for geotransforms
-    with no rotation.
-    
-    Parameters
-    ----------
-    x : float
-        x coordinate in map units
-    y : float
-        y coordinate in map units
-    gt : gdal geotransform (list)
-        See http://www.gdal.org/gdal_datamodel.html
-        
-    Returns
-    -------
-    px : int
-        x coordinate in pixel index units
-    py : int
-        y coordinate in pixel index units
-    """
-    px = int((x - gt[0]) / gt[1])
-    py = int((y - gt[3]) / gt[5])
-    return px, py
 
 def output_gtif(bandarr, cols, rows, outfilename, geotransform, projection, no_data_value=-99, driver_name='GTiff', dtype=GDT_Float32):
     """
