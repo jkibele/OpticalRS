@@ -187,7 +187,7 @@ def negKg_regression_array(bandarr,deptharr,band_list=None):
         band_list = range(bandarr.shape[-1])
     outlist = []
     for i in band_list:
-        negKg = band_attenuation_geometric(bandarr[:,:,i],deptharr)
+        negKg = band_attenuation_geometric(bandarr[...,i],deptharr)
         outlist.append(negKg)
     return np.array(outlist)
 
@@ -261,6 +261,6 @@ def reflectance_index(bandarr,deptharr,negKgarr,band_list=None):
     if not band_list:
         band_list = range(bandarr.shape[-1])
     for i in band_list:
-        RI = single_band_reflectance_index(bandarr[:,:,i], deptharr, negKgarr[i])
+        RI = single_band_reflectance_index(bandarr[...,i], deptharr, negKgarr[i])
         arrlist.append(RI)
     return np.ma.dstack(arrlist)

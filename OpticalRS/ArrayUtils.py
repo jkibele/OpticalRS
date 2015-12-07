@@ -29,7 +29,7 @@ def equalize_band_masks( marr ):
         Image array with equal band masks
     """
     nbands = marr.shape[-1]
-    anymask = np.repeat( np.expand_dims( marr.mask.any(2), 2 ), nbands, 2 )
+    anymask = np.repeat( np.expand_dims( marr.mask.any(-1), -1 ), nbands, -1 )
     marr.mask = anymask
     return marr
 
