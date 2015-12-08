@@ -60,7 +60,15 @@ def myR0(z,Rinf,Ad,g):
     """
     return Rinf + (Ad - Rinf) * np.exp(-1*g*z)
 
-def estRinf_g(zsand,Rsand,p0=None):
+def est_curve_params(zsand, Rsand, p0=None):
+    nbands = Rsand.shape[-1]
+    outlist = []
+    for i in range(nbands):
+        params = est_curve_params_one_band(zsand, Rsand[...,i], p0=p0)
+        outlist.append(params)
+    return np.array(outlist)
+
+def est_curve_params_one_band(zsand,Rsand,p0=None):
     """
     Estimate `Rinf` and `g` given sand depths `zsand` and corresponging 
     radiances `Rsand`. Estimate is made by curve fitting using
@@ -73,7 +81,7 @@ def estRinf_g(zsand,Rsand,p0=None):
     Rsand : array-like
         Irradiance reflectance immediately below the water surface or, if you 
         want to ignore units, atmospheric correction, and whatnot, just 
-        radiance values.
+        radiance values. This is a single band.
     p0 : None, scalar, or N-length sequence, optional
         Initial guess for the curve fitting parameters. If None, then the 
         initial values will all be 1
