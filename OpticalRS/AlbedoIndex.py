@@ -11,23 +11,23 @@ way. This method is the work of the author, Jared Kibele.
 References
 ==========
 
-Lyzenga, D.R., 1978. Passive remote sensing techniques for mapping water depth 
+Lyzenga, D.R., 1978. Passive remote sensing techniques for mapping water depth
 and bottom features. Appl. Opt. 17, 379–383. doi:10.1364/AO.17.000379
 
-Lyzenga, D.R., 1981. Remote sensing of bottom reflectance and water attenuation 
-parameters in shallow water using aircraft and Landsat data. International 
+Lyzenga, D.R., 1981. Remote sensing of bottom reflectance and water attenuation
+parameters in shallow water using aircraft and Landsat data. International
 Journal of Remote Sensing 2, 71–82. doi:10.1080/01431168108948342
 
 Philpot, W.D., 1987. Radiative transfer in stratified waters: a single-
-scattering approximation for irradiance. Applied Optics 26, 4123. 
+scattering approximation for irradiance. Applied Optics 26, 4123.
 doi:10.1364/AO.26.004123
 
-Philpot, W.D., 1989. Bathymetric mapping with passive multispectral imagery. 
+Philpot, W.D., 1989. Bathymetric mapping with passive multispectral imagery.
 Appl. Opt. 28, 1569–1578. doi:10.1364/AO.28.001569
 
-Sagawa, T., Boisnier, E., Komatsu, T., Mustapha, K.B., Hattour, A., Kosaka, N., 
-Miyazaki, S., 2010. Using bottom surface reflectance to map coastal marine 
-areas: a new application method for Lyzenga’s model. International Journal of 
+Sagawa, T., Boisnier, E., Komatsu, T., Mustapha, K.B., Hattour, A., Kosaka, N.,
+Miyazaki, S., 2010. Using bottom surface reflectance to map coastal marine
+areas: a new application method for Lyzenga’s model. International Journal of
 Remote Sensing 31, 3051–3064. doi:10.1080/01431160903154341
 """
 
@@ -36,12 +36,12 @@ from scipy.optimize import curve_fit
 
 def myR0(z,Rinf,Ad,g):
     """
-    This is the singly scattering irradiance (SSI) model (Philpot 1987) for 
+    This is the singly scattering irradiance (SSI) model (Philpot 1987) for
     irradiance reflectance immediately below the water surface for optically
     shallow, homogeneous water (eq. 2 from Philpot 1989). This model is
     essentially the same as the one discussed in appendix A of Lyzenga 1978.
     I've rearranged it a bit (from eq.2, Philpot 1989) but it's equivalent.
-    
+
     Parameters
     ----------
     z : array-like
@@ -52,7 +52,7 @@ def myR0(z,Rinf,Ad,g):
         Irradiance reflectance (albedo) of the bottom.
     g : float
         An effective attenuation coefficient of the water.
-        
+
     Returns
     -------
     R(0-) : array of floats
@@ -70,44 +70,50 @@ def est_curve_params(zsand, Rsand, p0=None):
 
 def est_curve_params_one_band(zsand,Rsand,p0=None):
     """
-    Estimate `Rinf` and `g` given sand depths `zsand` and corresponging 
+    Estimate `Rinf`, `Ad`, and `g` given sand depths `zsand` and corresponging
     radiances `Rsand`. Estimate is made by curve fitting using
     `scipy.optimize.curve_fit`.
-    
+
     Parameters
     ----------
     zsand : array-like
         Depth of water column.
     Rsand : array-like
-        Irradiance reflectance immediately below the water surface or, if you 
-        want to ignore units, atmospheric correction, and whatnot, just 
+        Irradiance reflectance immediately below the water surface or, if you
+        want to ignore units, atmospheric correction, and whatnot, just
         radiance values. This is a single band.
     p0 : None, scalar, or N-length sequence, optional
-        Initial guess for the curve fitting parameters. If None, then the 
+        Initial guess for the curve fitting parameters. If None, then the
         initial values will all be 1
-        
+
     Returns
     -------
     estRinf : float
         Estimated irradiance reflectance of an optically deep water column.
+    estAd : float
+        Estimated bottom albedo.
     est_g : float
         Estimated effective attenuation coefficient of the water.
     """
+    if np.ma.is_masked(zsand):
+        zsand = zsand.compressed()
+    if np.ma.is_masked(Rsand):
+        Rsand = Rsand.compressed()
     p, pcov = curve_fit(myR0,zsand,Rsand,p0)
     estRinf, estAd, est_g = p
     return estRinf, estAd, est_g
 
 def estAd(z,L,Rinf,g):
     """
-    Estimate the albedo `Ad` for radiance `L` at depth `z` assuming `Rinf` and 
+    Estimate the albedo `Ad` for radiance `L` at depth `z` assuming `Rinf` and
     `g`.
     """
     Ad = (L - Rinf + Rinf * np.exp(-1*g*z)) / np.exp(-1*g*z)
     return Ad
-    
+
 def albedo_index_single_band(z,L,sandz,sandL):
     """
-    
+
     """
     pass
 
@@ -129,7 +135,7 @@ def checkerboard(sAd=0.35,kAd=0.2):
     row2 = np.hstack([k,s]*width)
     board = np.vstack([row1,row2]*width)
     return board
-    
+
 def zGen(errFactor,n=200,zmin=0.5,zmax=20.0):
     """
     Generate an array of depths with measurement error.
@@ -144,7 +150,7 @@ def depthboard(zmin=0.5,zmax=20.0,errFactor=0.0):
     for i in range(149): # already made one row
         r = np.vstack((r,zGen(errFactor,150,zmin,zmax)))
     return r
-    
+
 def radiance_checkerboard(sAd=0.35,kAd=0.2,Rinf=0.25,g=0.16,satErr=0.005):
     Ad = checkerboard(sAd=sAd,kAd=kAd)
     z = depthboard()

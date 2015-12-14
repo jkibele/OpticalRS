@@ -28,5 +28,4 @@ cdict = dict( zip(wvlengths,cnames) )
 wtype_names = ['Oceanic I', 'Oceanic II', 'Oceanic III', 'Coastal 1', 'Coastal 3',
           'Coastal 5', 'Coastal 7']
 wtype_dict = dict( zip( wtype_names, (o1_Kd, o2_Kd, o3_Kd, c1_Kd, c3_Kd, c5_Kd, c7_Kd) ) )
-
-jerlov_df = pd.DataFrame(wtype_dict, index=wvlengths)
+jerlov_df = pd.DataFrame(wtype_dict, index=wvlengths)[wtype_names]
