@@ -9,7 +9,7 @@ in concept to previous methods by Sagawa and Lyzenga but works in a different
 way. This method is the work of the author, Jared Kibele.
 
 References
-==========
+----------
 
 Lyzenga, D.R., 1978. Passive remote sensing techniques for mapping water depth
 and bottom features. Appl. Opt. 17, 379–383. doi:10.1364/AO.17.000379
