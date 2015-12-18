@@ -3,7 +3,13 @@
   <title></title>
   <layer-tree-group expanded="1" checked="Qt::PartiallyChecked" name="">
     <customproperties/>
-    <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="BPS_adj_depth_raster_masked20151214123619788" name="BPS_adj_depth_raster_masked">
+    <layer-tree-layer expanded="1" checked="Qt::Checked" id="BPS_adj_depth_raster_masked220151218143547336" name="BPS_adj_depth_raster_masked2">
+      <customproperties/>
+    </layer-tree-layer>
+    <layer-tree-layer expanded="1" checked="Qt::Checked" id="BPS_adj_depth_raster220151218143013341" name="BPS_adj_depth_raster2">
+      <customproperties/>
+    </layer-tree-layer>
+    <layer-tree-layer expanded="1" checked="Qt::Checked" id="BPS_adj_depth_raster_masked20151214123619788" name="BPS_adj_depth_raster_masked">
       <customproperties/>
     </layer-tree-layer>
     <layer-tree-layer expanded="1" checked="Qt::Checked" id="BPS_points20151202111927405" name="BPS_points">
@@ -21,10 +27,10 @@
     <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="knn_depth_est20151215123622569" name="knn_depth_est">
       <customproperties/>
     </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Checked" id="Ad_index2_Rinf20151215192407110" name="Ad_index2_Rinf">
+    <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="Ad_index2_Rinf20151215192407110" name="Ad_index2_Rinf">
       <customproperties/>
     </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Checked" id="Ad_index_Rinf20151215130447253" name="Ad_index_Rinf">
+    <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="Ad_index_Rinf20151215130447253" name="Ad_index_Rinf">
       <customproperties/>
     </layer-tree-layer>
     <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="Ad_index_dwm20151215122909214" name="Ad_index_dwm">
@@ -44,10 +50,10 @@
   <mapcanvas>
     <units>meters</units>
     <extent>
-      <xmin>300883.7573285133112222</xmin>
-      <ymin>5983764.06527736503630877</ymin>
-      <xmax>301608.97554607619531453</xmax>
-      <ymax>5985026.91639986354857683</ymax>
+      <xmin>300865.88259629398817196</xmin>
+      <ymin>5984079.09539231844246387</ymin>
+      <xmax>300888.54566504393005744</xmax>
+      <ymax>5984118.55951106920838356</ymax>
     </extent>
     <rotation>0</rotation>
     <projections>0</projections>
@@ -79,12 +85,24 @@
       <item>knn_depth_est20151215123622569</item>
       <item>Ad_index_Rinf20151215130447253</item>
       <item>Ad_index2_Rinf20151215192407110</item>
+      <item>BPS_adj_depth_raster220151218143013341</item>
+      <item>BPS_adj_depth_raster_masked220151218143547336</item>
     </custom-order>
   </layer-tree-canvas>
   <legend updateDrawingOrder="true">
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="BPS_adj_depth_raster_masked" showFeatureCount="0">
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="BPS_adj_depth_raster_masked2" showFeatureCount="0">
       <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="BPS_adj_depth_raster_masked20151214123619788" visible="0"/>
+        <legendlayerfile isInOverview="0" layerid="BPS_adj_depth_raster_masked220151218143547336" visible="1"/>
+      </filegroup>
+    </legendlayer>
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="BPS_adj_depth_raster2" showFeatureCount="0">
+      <filegroup open="true" hidden="false">
+        <legendlayerfile isInOverview="0" layerid="BPS_adj_depth_raster220151218143013341" visible="1"/>
+      </filegroup>
+    </legendlayer>
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="BPS_adj_depth_raster_masked" showFeatureCount="0">
+      <filegroup open="true" hidden="false">
+        <legendlayerfile isInOverview="0" layerid="BPS_adj_depth_raster_masked20151214123619788" visible="1"/>
       </filegroup>
     </legendlayer>
     <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="BPS_points" showFeatureCount="0">
@@ -112,14 +130,14 @@
         <legendlayerfile isInOverview="0" layerid="knn_depth_est20151215123622569" visible="0"/>
       </filegroup>
     </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="Ad_index2_Rinf" showFeatureCount="0">
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="Ad_index2_Rinf" showFeatureCount="0">
       <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="Ad_index2_Rinf20151215192407110" visible="1"/>
+        <legendlayerfile isInOverview="0" layerid="Ad_index2_Rinf20151215192407110" visible="0"/>
       </filegroup>
     </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="Ad_index_Rinf" showFeatureCount="0">
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="Ad_index_Rinf" showFeatureCount="0">
       <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="Ad_index_Rinf20151215130447253" visible="1"/>
+        <legendlayerfile isInOverview="0" layerid="Ad_index_Rinf20151215130447253" visible="0"/>
       </filegroup>
     </legendlayer>
     <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="Ad_index_dwm" showFeatureCount="0">
@@ -143,7 +161,7 @@
       </filegroup>
     </legendlayer>
   </legend>
-  <projectlayers layercount="12">
+  <projectlayers layercount="14">
     <maplayer minimumScale="0" maximumScale="1e+08" type="raster" hasScaleBasedVisibilityFlag="0">
       <id>Ad_index2_Rinf20151215192407110</id>
       <datasource>./Ad_index2_Rinf.tif</datasource>
@@ -334,6 +352,58 @@
       <blendMode>0</blendMode>
     </maplayer>
     <maplayer minimumScale="-4.65661e-10" maximumScale="1e+08" type="raster" hasScaleBasedVisibilityFlag="0">
+      <id>BPS_adj_depth_raster220151218143013341</id>
+      <datasource>./BPS_adj_depth_raster2.tif</datasource>
+      <title></title>
+      <abstract></abstract>
+      <keywordList>
+        <value></value>
+      </keywordList>
+      <layername>BPS_adj_depth_raster2</layername>
+      <srs>
+        <spatialrefsys>
+          <proj4>+proj=utm +zone=60 +south +datum=WGS84 +units=m +no_defs</proj4>
+          <srsid>3210</srsid>
+          <srid>32760</srid>
+          <authid>EPSG:32760</authid>
+          <description>WGS 84 / UTM zone 60S</description>
+          <projectionacronym>utm</projectionacronym>
+          <ellipsoidacronym>WGS84</ellipsoidacronym>
+          <geographicflag>false</geographicflag>
+        </spatialrefsys>
+      </srs>
+      <customproperties>
+        <property key="identify/format" value="Value"/>
+      </customproperties>
+      <provider>gdal</provider>
+      <noData>
+        <noDataList bandNo="1" useSrcNoData="0">
+          <noDataRange min="-99" max="-99"/>
+        </noDataList>
+      </noData>
+      <map-layer-style-manager current="">
+        <map-layer-style name=""/>
+      </map-layer-style-manager>
+      <pipe>
+        <rasterrenderer opacity="1" alphaBand="-1" classificationMax="16.3535" classificationMinMaxOrigin="MinMaxFullExtentEstimated" band="1" classificationMin="0.16197" type="singlebandpseudocolor">
+          <rasterTransparency/>
+          <rastershader>
+            <colorrampshader colorRampType="INTERPOLATED" clip="0">
+              <item alpha="255" value="0.16197" label="0.161970" color="#d7191c"/>
+              <item alpha="255" value="4.20985" label="4.209853" color="#fdae61"/>
+              <item alpha="255" value="8.25774" label="8.257735" color="#ffffbf"/>
+              <item alpha="255" value="12.3056" label="12.305618" color="#abd9e9"/>
+              <item alpha="255" value="16.3535" label="16.353500" color="#2c7bb6"/>
+            </colorrampshader>
+          </rastershader>
+        </rasterrenderer>
+        <brightnesscontrast brightness="0" contrast="0"/>
+        <huesaturation colorizeGreen="128" colorizeOn="0" colorizeRed="255" colorizeBlue="128" grayscaleMode="0" saturation="0" colorizeStrength="100"/>
+        <rasterresampler maxOversampling="2"/>
+      </pipe>
+      <blendMode>0</blendMode>
+    </maplayer>
+    <maplayer minimumScale="-4.65661e-10" maximumScale="1e+08" type="raster" hasScaleBasedVisibilityFlag="0">
       <id>BPS_adj_depth_raster_masked20151214123619788</id>
       <datasource>./BPS_adj_depth_raster_masked.tif</datasource>
       <title></title>
@@ -342,6 +412,56 @@
         <value></value>
       </keywordList>
       <layername>BPS_adj_depth_raster_masked</layername>
+      <srs>
+        <spatialrefsys>
+          <proj4>+proj=utm +zone=60 +south +datum=WGS84 +units=m +no_defs</proj4>
+          <srsid>3210</srsid>
+          <srid>32760</srid>
+          <authid>EPSG:32760</authid>
+          <description>WGS 84 / UTM zone 60S</description>
+          <projectionacronym>utm</projectionacronym>
+          <ellipsoidacronym>WGS84</ellipsoidacronym>
+          <geographicflag>false</geographicflag>
+        </spatialrefsys>
+      </srs>
+      <customproperties>
+        <property key="identify/format" value="Value"/>
+      </customproperties>
+      <provider>gdal</provider>
+      <noData>
+        <noDataList bandNo="1" useSrcNoData="1"/>
+      </noData>
+      <map-layer-style-manager current="">
+        <map-layer-style name=""/>
+      </map-layer-style-manager>
+      <pipe>
+        <rasterrenderer opacity="1" alphaBand="0" classificationMax="16.3535" classificationMinMaxOrigin="MinMaxFullExtentEstimated" band="1" classificationMin="0.16197" type="singlebandpseudocolor">
+          <rasterTransparency/>
+          <rastershader>
+            <colorrampshader colorRampType="INTERPOLATED" clip="0">
+              <item alpha="255" value="0.16197" label="0.161970" color="#d7191c"/>
+              <item alpha="255" value="4.20985" label="4.209853" color="#fdae61"/>
+              <item alpha="255" value="8.25774" label="8.257735" color="#ffffbf"/>
+              <item alpha="255" value="12.3056" label="12.305618" color="#abd9e9"/>
+              <item alpha="255" value="16.3535" label="16.353500" color="#2c7bb6"/>
+            </colorrampshader>
+          </rastershader>
+        </rasterrenderer>
+        <brightnesscontrast brightness="0" contrast="0"/>
+        <huesaturation colorizeGreen="128" colorizeOn="0" colorizeRed="255" colorizeBlue="128" grayscaleMode="0" saturation="0" colorizeStrength="100"/>
+        <rasterresampler maxOversampling="2"/>
+      </pipe>
+      <blendMode>0</blendMode>
+    </maplayer>
+    <maplayer minimumScale="0" maximumScale="1e+08" type="raster" hasScaleBasedVisibilityFlag="0">
+      <id>BPS_adj_depth_raster_masked220151218143547336</id>
+      <datasource>./BPS_adj_depth_raster_masked2.tif</datasource>
+      <title></title>
+      <abstract></abstract>
+      <keywordList>
+        <value></value>
+      </keywordList>
+      <layername>BPS_adj_depth_raster_masked2</layername>
       <srs>
         <spatialrefsys>
           <proj4>+proj=utm +zone=60 +south +datum=WGS84 +units=m +no_defs</proj4>

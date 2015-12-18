@@ -42,7 +42,6 @@ class DepthEstimator(object):
             self.kdrds = None
         else:
             self.kdrds = RasterDS(self.known_original)
-        self.known_depth_arr = None
         self.known_depth_arr = self.__known_depth_arr()
         self.k = k
         self.weights = weights
@@ -57,16 +56,21 @@ class DepthEstimator(object):
 
     def __imarr(self):
         """
+
         Return 3D (R,C,nBands) image array if possible. If only 2D
-        (pixels,nBands) array is available, return `None`.
+        (pixels,nBands) array is available, return `None`. Returned array will
+        be np.ma.MaskedArray type even if no pixels are masked.
+
         """
         try:
             self.imarr
         except AttributeError:
             if self.imlevel == 4:
-                self.imarr = self.imrds.band_array
+                arr = np.ma.masked_invalid(self.imrds.band_array)
+                self.imarr = arr
             elif self.imlevel == 3:
-                self.imarr = self.img_original
+                arr = np.ma.masked_invalid(self.img_original)
+                self.imarr = arr
             else: # level 2
                 self.imarr = None
         return self.imarr
@@ -76,20 +80,21 @@ class DepthEstimator(object):
         Return a 2D (R,C) masked array of known depths if possible. If flat
         array was handed in instead, return `None`.
         """
-        if self.known_depth_arr:
-            pass
-        elif self.kdrds:
-            arr = self.kdrds.band_array.squeeze()
-            self.known_depth_arr = np.ma.masked_invalid(arr)
-        elif isinstance(self.known_original,np.ndarray):
-            arr = self.known_original.squeeze()
-            if arr.ndim > 1:
+        try:
+            self.known_depth_arr
+        except AttributeError:
+            if self.kdrds:
+                arr = self.kdrds.band_array.squeeze()
                 self.known_depth_arr = np.ma.masked_invalid(arr)
+            elif isinstance(self.known_original,np.ndarray):
+                arr = self.known_original.squeeze()
+                if arr.ndim > 1:
+                    self.known_depth_arr = np.ma.masked_invalid(arr)
+                else:
+                    self.known_depth_arr = None
             else:
+                # I can't think of a case where we'd get here but...
                 self.known_depth_arr = None
-        else:
-            # I can't think of a case where we'd get here but...
-            self.known_depth_arr = None
         return self.known_depth_arr
 
     @property
@@ -108,6 +113,13 @@ class DepthEstimator(object):
             return self.imarr.reshape(-1,self.imarr.shape[-1])
         else:
             return self.img_original
+
+    @property
+    def imarr_compressed(self):
+        """
+        Return unmasked pixels in (pixels,bands) shape.
+        """
+        return self.imarr_flat.compressed().reshape(-1,self.nbands)
 
     @property
     def known_imarr(self):
@@ -170,3 +182,15 @@ class DepthEstimator(object):
         return KNNDepth.train_model(self.known_imarr_flat.compressed().reshape(-1,self.nbands),
                                     self.known_depth_arr_flat.compressed(),
                                     k=k,weights=weights)
+
+    def knn_depth_estimation(self,k=5,weights='uniform'):
+        """
+        Train a KNN regression model with `known_depths` and corresponding
+        pixels from `img`. Then use that model to predict depths for all pixels
+        in `img`. Return a single band array of estimated depths.
+        """
+        out = self.imarr[...,0].copy()
+        knnmodel = self.knn_depth_model(k=k, weights=weights)
+        ests = knnmodel.predict(self.imarr_compressed)
+        out[~out.mask] = ests
+        return out
