@@ -103,19 +103,26 @@ def est_curve_params_one_band(zsand,Rsand,p0=None):
     estRinf, estAd, est_g = p
     return estRinf, estAd, est_g
 
+def estAd_single_band(z,L,Rinf,g):
+    """
+    Estimate the albedo `Ad` for radiance `L` at depth `z` assuming `Rinf` and
+    `g`. This method assumes that L is a single band and will return estimated
+    Ad (albedo index) values for that single band.
+    """
+    Ad = (L - Rinf + Rinf * np.exp(-1*g*z)) / np.exp(-1*g*z)
+    return Ad
+
 def estAd(z,L,Rinf,g):
     """
     Estimate the albedo `Ad` for radiance `L` at depth `z` assuming `Rinf` and
     `g`.
     """
+    nbands = L.shape[-1]
+    Rinf = Rinf[:nbands]
+    g = g[:nbands]
+    z = np.repeat(np.atleast_3d(z), nbands, axis=2)
     Ad = (L - Rinf + Rinf * np.exp(-1*g*z)) / np.exp(-1*g*z)
     return Ad
-
-def albedo_index_single_band(z,L,sandz,sandL):
-    """
-
-    """
-    pass
 
 ## Testing Methods ###########################################################
 # This stuff is just for brewing up test data
