@@ -102,9 +102,7 @@ def output_gtif_like_img(img, bandarr, outfilename, no_data_value=-99, dtype=GDT
 
 ## End of Raster Handling stuff ################################################
 
-"""I have to make a dictionary of Band-Averaged Solar Spectral Irradiance because
-DigitalGlobe apparently could not be bothered to include these values in the xml.
-These values are taken from Table 4 in DigitalGlobe's Radiometric Use of WorldView-2
+"""These values are taken from Table 4 in DigitalGlobe's Radiometric Use of WorldView-2
 Imagery technical note. See references.txt for more info."""
 Esun_od = OrderedDict((
         ('BAND_C', 1758.2229),

@@ -33,6 +33,34 @@ def equalize_band_masks( marr ):
     marr.mask = anymask
     return marr
 
+def equalize_array_masks(arr1, arr2):
+    """
+    Given two arrays, return them with only pixels unmasked in both arrays still
+    unmasked. Input arrays can have different numbers of bands but must have the
+    same numbers of rows and columns.
+
+    Parameters
+    ----------
+    arr1 : np.ma.MaskedArray
+        An array of shape (RxC) or (RxCxBands).
+    arr2 : np.ma.MaskedArray
+        An array of shape (RxC) or (RxCxBands).
+
+    Returns
+    -------
+    tuple of 2 np.ma.MaskedArray
+        The original 2 arrays with the same 2d mask for each band. If a pixel
+        (RxC position) is masked in any band of either input array, it will be
+        masked in every band of the output.
+    """
+    arr1 = np.ma.atleast_3d(arr1)
+    arr2 = np.ma.atleast_3d(arr2)
+    maskstack = np.append(arr1.mask, arr2.mask, axis=2)
+    maskany = maskstack.any(axis=2)
+    arr1out = mask3D_with_2D(arr1, maskany)
+    arr2out = mask3D_with_2D(arr2, maskany)
+    return arr1out, arr2out
+
 def band_df( imarr, bandnames=None, equalize_masks=True ):
     """
     Return a pandas dataframe with spectral values and depths from `imarr`.
@@ -191,7 +219,7 @@ def each_band_unmasked( imarr, funct, *args, **kwargs ):
         Arguments to be supplied to to `funct`.
     **kwargs :
         Keyword arguments to be supplied to `funct`.
-        
+
 
     Returns
     -------
@@ -222,7 +250,7 @@ def each_band_masked( imarr, funct, *args, **kwargs ):
         Arguments to be supplied to to `funct`.
     **kwargs :
         Keyword arguments to be supplied to `funct`.
-        
+
 
     Returns
     -------
@@ -246,8 +274,8 @@ def each_band_masked( imarr, funct, *args, **kwargs ):
 
 def each_band( imarr, funct, *args, **kwargs ):
     """
-    Apply a function to each band of a RxCxBands shaped image array as if it 
-    were a single band (RxC) array. Masked and unmasked arrays are handled 
+    Apply a function to each band of a RxCxBands shaped image array as if it
+    were a single band (RxC) array. Masked and unmasked arrays are handled
     slightly differently. See each_band_masked and each_band_unmasked for
     details.
 
@@ -263,13 +291,13 @@ def each_band( imarr, funct, *args, **kwargs ):
         Arguments to be supplied to to `funct`.
     **kwargs :
         Keyword arguments to be supplied to `funct`.
-        
+
 
     Returns
     -------
     numpy array
         The results to applying `funct` to each band.
-        
+
     See Also
     --------
     each_band_masked, each_band_unmasked

@@ -46,6 +46,7 @@ class DepthEstimator(object):
         self.k = k
         self.weights = weights
         self.imarr = self.__imarr()
+        self.__mask_depths_with_no_image()
         self.nbands = self.imarr_flat.shape[-1]
 
         # Check that the numbers of pixels are compatible
@@ -56,11 +57,9 @@ class DepthEstimator(object):
 
     def __imarr(self):
         """
-
         Return 3D (R,C,nBands) image array if possible. If only 2D
         (pixels,nBands) array is available, return `None`. Returned array will
         be np.ma.MaskedArray type even if no pixels are masked.
-
         """
         try:
             self.imarr
@@ -96,6 +95,16 @@ class DepthEstimator(object):
                 # I can't think of a case where we'd get here but...
                 self.known_depth_arr = None
         return self.known_depth_arr
+
+    def __mask_depths_with_no_image(self):
+        """
+        Mask depths that have no corresponding pixels. Only works for non-flat
+        arrays.
+        """
+        if np.ma.is_masked(self.imarr) and np.ma.is_masked(self.known_depth_arr):
+            # I'm assuming all image bands have the same mask. ...they should.
+            immask = self.imarr[...,0].mask
+            self.known_depth_arr = np.ma.masked_where(immask, self.known_depth_arr)
 
     @property
     def known_depth_arr_flat(self):
