@@ -148,7 +148,7 @@ def single_band_reflectance_index(single_band_arr,depth_arr,negKG):
     --------
     band_attenuation_geometric
     """
-    RI = np.log( single_band_arr ) - negKG * depth_arr
+    RI = np.log( single_band_arr.squeeze() ) - negKG * depth_arr.squeeze()
     return RI
 
 def negKg_regression_array(bandarr,deptharr,band_list=None):

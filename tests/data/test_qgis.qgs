@@ -21,13 +21,16 @@
     <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="more_sand20151214130705175" name="more_sand">
       <customproperties/>
     </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Checked" id="clip20151201225146489" name="clip">
+    <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="clip20151201225146489" name="clip">
       <customproperties/>
     </layer-tree-layer>
     <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="knn_depth_est20151215123622569" name="knn_depth_est">
       <customproperties/>
     </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="Ad_index2_Rinf20151215192407110" name="Ad_index2_Rinf">
+    <layer-tree-layer expanded="1" checked="Qt::Checked" id="Ad_no_denoise20160103152730979" name="Ad_no_denoise">
+      <customproperties/>
+    </layer-tree-layer>
+    <layer-tree-layer expanded="1" checked="Qt::Checked" id="Ad_index2_Rinf20151215192407110" name="Ad_index2_Rinf">
       <customproperties/>
     </layer-tree-layer>
     <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="Ad_index_Rinf20151215130447253" name="Ad_index_Rinf">
@@ -39,13 +42,13 @@
     <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="eReefDepth20151201225609874" name="eReefDepth">
       <customproperties/>
     </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="eReefWV2_denoised20151214124140339" name="eReefWV2_denoised">
+    <layer-tree-layer expanded="1" checked="Qt::Checked" id="eReefWV2_denoised20151214124140339" name="eReefWV2_denoised">
       <customproperties/>
     </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="eReefWV220151201225105726" name="eReefWV2">
+    <layer-tree-layer expanded="1" checked="Qt::Checked" id="eReefWV220151201225105726" name="eReefWV2">
       <customproperties/>
     </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Checked" id="14JAN18223447_M2AS_R1C1_053618191020_01_P00120151221171845455" name="14JAN18223447-M2AS_R1C1-053618191020_01_P001">
+    <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="14JAN18223447_M2AS_R1C1_053618191020_01_P00120151221171845455" name="14JAN18223447-M2AS_R1C1-053618191020_01_P001">
       <customproperties/>
     </layer-tree-layer>
   </layer-tree-group>
@@ -53,10 +56,10 @@
   <mapcanvas>
     <units>meters</units>
     <extent>
-      <xmin>297615.20000000001164153</xmin>
-      <ymin>5978889.20000000018626451</ymin>
-      <xmax>306216.79999999998835847</xmax>
-      <ymax>5987490.79999999981373549</ymax>
+      <xmin>300657.55028248520102352</xmin>
+      <ymin>5983775.18418079521507025</ymin>
+      <xmax>301195.15028248529415578</xmax>
+      <ymax>5984312.78418079297989607</ymax>
     </extent>
     <rotation>0</rotation>
     <projections>0</projections>
@@ -91,6 +94,7 @@
       <item>BPS_adj_depth_raster220151218143013341</item>
       <item>BPS_adj_depth_raster_masked220151218143547336</item>
       <item>14JAN18223447_M2AS_R1C1_053618191020_01_P00120151221171845455</item>
+      <item>Ad_no_denoise20160103152730979</item>
     </custom-order>
   </layer-tree-canvas>
   <legend updateDrawingOrder="true">
@@ -124,9 +128,9 @@
         <legendlayerfile isInOverview="0" layerid="more_sand20151214130705175" visible="0"/>
       </filegroup>
     </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="clip" showFeatureCount="0">
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="clip" showFeatureCount="0">
       <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="clip20151201225146489" visible="1"/>
+        <legendlayerfile isInOverview="0" layerid="clip20151201225146489" visible="0"/>
       </filegroup>
     </legendlayer>
     <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="knn_depth_est" showFeatureCount="0">
@@ -134,9 +138,14 @@
         <legendlayerfile isInOverview="0" layerid="knn_depth_est20151215123622569" visible="0"/>
       </filegroup>
     </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="Ad_index2_Rinf" showFeatureCount="0">
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="Ad_no_denoise" showFeatureCount="0">
       <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="Ad_index2_Rinf20151215192407110" visible="0"/>
+        <legendlayerfile isInOverview="0" layerid="Ad_no_denoise20160103152730979" visible="1"/>
+      </filegroup>
+    </legendlayer>
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="Ad_index2_Rinf" showFeatureCount="0">
+      <filegroup open="true" hidden="false">
+        <legendlayerfile isInOverview="0" layerid="Ad_index2_Rinf20151215192407110" visible="1"/>
       </filegroup>
     </legendlayer>
     <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="Ad_index_Rinf" showFeatureCount="0">
@@ -154,19 +163,19 @@
         <legendlayerfile isInOverview="0" layerid="eReefDepth20151201225609874" visible="0"/>
       </filegroup>
     </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="eReefWV2_denoised" showFeatureCount="0">
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="eReefWV2_denoised" showFeatureCount="0">
       <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="eReefWV2_denoised20151214124140339" visible="0"/>
+        <legendlayerfile isInOverview="0" layerid="eReefWV2_denoised20151214124140339" visible="1"/>
       </filegroup>
     </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="eReefWV2" showFeatureCount="0">
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="eReefWV2" showFeatureCount="0">
       <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="eReefWV220151201225105726" visible="0"/>
+        <legendlayerfile isInOverview="0" layerid="eReefWV220151201225105726" visible="1"/>
       </filegroup>
     </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="14JAN18223447-M2AS_R1C1-053618191020_01_P001" showFeatureCount="0">
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="14JAN18223447-M2AS_R1C1-053618191020_01_P001" showFeatureCount="0">
       <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="14JAN18223447_M2AS_R1C1_053618191020_01_P00120151221171845455" visible="1"/>
+        <legendlayerfile isInOverview="0" layerid="14JAN18223447_M2AS_R1C1_053618191020_01_P00120151221171845455" visible="0"/>
       </filegroup>
     </legendlayer>
   </legend>
@@ -203,6 +212,53 @@
         <Extent ymin="5979030.1134421918541193" xmin="297881.26373507943935692" ymax="5987255.69786436017602682" xmax="306292.73707074334379286"/>
         <LayerSet/>
         <Grid/>
+        <ComposerMapGrid rightAnnotationDirection="0" gridFramePenColor="0,0,0,255" show="0" bottomAnnotationPosition="1" annotationPrecision="3" showAnnotation="0" topFrameDivisions="0" uuid="{001cd3e9-3f7f-4438-a589-89306ecbe24e}" leftAnnotationDirection="0" topAnnotationPosition="1" rightAnnotationDisplay="0" offsetX="0" offsetY="0" rightFrameDivisions="0" gridStyle="0" annotationFontColor="0,0,0,255" intervalX="0" gridFrameSideFlags="15" intervalY="0" bottomAnnotationDirection="0" leftAnnotationDisplay="0" leftFrameDivisions="0" frameFillColor1="255,255,255,255" annotationExpression="" frameFillColor2="0,0,0,255" crossLength="3" gridFramePenThickness="0.5" bottomAnnotationDisplay="0" unit="0" topAnnotationDisplay="0" leftAnnotationPosition="1" blendMode="0" gridFrameStyle="0" rightAnnotationPosition="1" gridFrameWidth="2" name="Grid 1" annotationFormat="0" bottomFrameDivisions="0" topAnnotationDirection="0" frameAnnotationDistance="1">
+          <lineStyle>
+            <symbol alpha="1" clip_to_extent="1" type="line" name="">
+              <layer pass="0" class="SimpleLine" locked="0">
+                <prop k="capstyle" v="square"/>
+                <prop k="customdash" v="5;2"/>
+                <prop k="customdash_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="customdash_unit" v="MM"/>
+                <prop k="draw_inside_polygon" v="0"/>
+                <prop k="joinstyle" v="bevel"/>
+                <prop k="line_color" v="0,0,0,255"/>
+                <prop k="line_style" v="solid"/>
+                <prop k="line_width" v="0"/>
+                <prop k="line_width_unit" v="MM"/>
+                <prop k="offset" v="0"/>
+                <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="offset_unit" v="MM"/>
+                <prop k="use_custom_dash" v="0"/>
+                <prop k="width_map_unit_scale" v="0,0,0,0,0,0"/>
+              </layer>
+            </symbol>
+          </lineStyle>
+          <markerStyle>
+            <symbol alpha="1" clip_to_extent="1" type="marker" name="">
+              <layer pass="0" class="SimpleMarker" locked="0">
+                <prop k="angle" v="0"/>
+                <prop k="color" v="0,0,0,255"/>
+                <prop k="horizontal_anchor_point" v="1"/>
+                <prop k="name" v="circle"/>
+                <prop k="offset" v="0,0"/>
+                <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="offset_unit" v="MM"/>
+                <prop k="outline_color" v="0,0,0,255"/>
+                <prop k="outline_style" v="solid"/>
+                <prop k="outline_width" v="0"/>
+                <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="outline_width_unit" v="MM"/>
+                <prop k="scale_method" v="diameter"/>
+                <prop k="size" v="2"/>
+                <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="size_unit" v="MM"/>
+                <prop k="vertical_anchor_point" v="1"/>
+              </layer>
+            </symbol>
+          </markerStyle>
+          <annotationFontProperties description="Ubuntu,11,-1,5,50,0,0,0,0,0" style=""/>
+        </ComposerMapGrid>
         <AtlasMap scalingMode="2" atlasDriven="0" margin="0.10000000000000001"/>
         <ComposerItem pagey="14" page="1" id="" lastValidViewScaleFactor="1.89598" positionMode="0" positionLock="false" x="15" y="14" visibility="1" zValue="1" background="true" transparency="0" frameJoinStyle="miter" blendMode="0" width="181" outlineWidth="0.3" excludeFromExports="0" uuid="{dcb0711e-080d-439d-bc29-0d1aef4e659f}" height="177" itemRotation="0" frame="false" pagex="15">
           <FrameColor alpha="255" red="0" blue="0" green="0"/>
@@ -219,7 +275,7 @@
       </customproperties>
     </Composition>
   </Composer>
-  <projectlayers layercount="15">
+  <projectlayers layercount="16">
     <maplayer minimumScale="0" maximumScale="1e+08" type="raster" hasScaleBasedVisibilityFlag="0">
       <id>14JAN18223447_M2AS_R1C1_053618191020_01_P00120151221171845455</id>
       <datasource>../../../../gisdata/DigitalGlobe/DGF_Imagery/053618191020_01/053618191020_01_P001_MUL/14JAN18223447-M2AS_R1C1-053618191020_01_P001.TIF</datasource>
@@ -463,6 +519,66 @@
           <blueContrastEnhancement>
             <minValue>0.158443</minValue>
             <maxValue>0.297111</maxValue>
+            <algorithm>StretchToMinimumMaximum</algorithm>
+          </blueContrastEnhancement>
+        </rasterrenderer>
+        <brightnesscontrast brightness="0" contrast="0"/>
+        <huesaturation colorizeGreen="128" colorizeOn="0" colorizeRed="255" colorizeBlue="128" grayscaleMode="0" saturation="0" colorizeStrength="100"/>
+        <rasterresampler maxOversampling="2"/>
+      </pipe>
+      <blendMode>0</blendMode>
+    </maplayer>
+    <maplayer minimumScale="-4.65661e-10" maximumScale="1e+08" type="raster" hasScaleBasedVisibilityFlag="0">
+      <id>Ad_no_denoise20160103152730979</id>
+      <datasource>./Ad_no_denoise.tif</datasource>
+      <title></title>
+      <abstract></abstract>
+      <keywordList>
+        <value></value>
+      </keywordList>
+      <layername>Ad_no_denoise</layername>
+      <srs>
+        <spatialrefsys>
+          <proj4>+proj=utm +zone=60 +south +datum=WGS84 +units=m +no_defs</proj4>
+          <srsid>3210</srsid>
+          <srid>32760</srid>
+          <authid>EPSG:32760</authid>
+          <description>WGS 84 / UTM zone 60S</description>
+          <projectionacronym>utm</projectionacronym>
+          <ellipsoidacronym>WGS84</ellipsoidacronym>
+          <geographicflag>false</geographicflag>
+        </spatialrefsys>
+      </srs>
+      <customproperties>
+        <property key="identify/format" value="Value"/>
+      </customproperties>
+      <provider>gdal</provider>
+      <noData>
+        <noDataList bandNo="1" useSrcNoData="1"/>
+        <noDataList bandNo="2" useSrcNoData="1"/>
+        <noDataList bandNo="3" useSrcNoData="1"/>
+        <noDataList bandNo="4" useSrcNoData="1"/>
+        <noDataList bandNo="5" useSrcNoData="1"/>
+      </noData>
+      <map-layer-style-manager current="">
+        <map-layer-style name=""/>
+      </map-layer-style-manager>
+      <pipe>
+        <rasterrenderer opacity="1" alphaBand="0" blueBand="1" greenBand="2" type="multibandcolor" redBand="3">
+          <rasterTransparency/>
+          <redContrastEnhancement>
+            <minValue>161</minValue>
+            <maxValue>476</maxValue>
+            <algorithm>StretchToMinimumMaximum</algorithm>
+          </redContrastEnhancement>
+          <greenContrastEnhancement>
+            <minValue>194</minValue>
+            <maxValue>345</maxValue>
+            <algorithm>StretchToMinimumMaximum</algorithm>
+          </greenContrastEnhancement>
+          <blueContrastEnhancement>
+            <minValue>296</minValue>
+            <maxValue>632</maxValue>
             <algorithm>StretchToMinimumMaximum</algorithm>
           </blueContrastEnhancement>
         </rasterrenderer>
@@ -1399,6 +1515,7 @@
       <SingleCategoryDiagramRenderer diagramType="Pie">
         <DiagramCategory penColor="#000000" labelPlacementMethod="XHeight" penWidth="0" diagramOrientation="Up" minimumSize="0" barWidth="5" penAlpha="255" maxScaleDenominator="1e+08" backgroundColor="#ffffff" transparency="0" width="15" scaleDependency="Area" backgroundAlpha="255" angleOffset="1440" scaleBasedVisibility="0" enabled="0" height="15" sizeType="MM" minScaleDenominator="-4.65661e-10">
           <fontProperties description="Ubuntu,11,-1,5,50,0,0,0,0,0" style=""/>
+          <attribute field="" color="#000000" label=""/>
         </DiagramCategory>
       </SingleCategoryDiagramRenderer>
       <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="0" dist="0" xPosColumn="-1" priority="0" obstacle="0" showAll="1"/>

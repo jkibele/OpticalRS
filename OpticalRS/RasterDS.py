@@ -100,9 +100,9 @@ class RasterDS(object):
         gds = self.gdal_ds
         gt = gds.GetGeoTransform()
         cols = gds.RasterXSize
-        rows = gds.RasterYSize        
+        rows = gds.RasterYSize
         return get_extent(gt, cols, rows)
-        
+
     @property
     def raster_extent(self):
         """
@@ -279,12 +279,12 @@ class RasterDS(object):
             outfilename = self.output_file_path()
         output_gtif_like_img(self.gdal_ds, bandarr, outfilename, no_data_value=no_data_value, dtype=dtype)
         return RasterDS(outfilename)
-        
+
 def get_extent(gt,cols,rows):
     """
     Return list of corner coordinates from a geotransform. This code was taken
     from: http://gis.stackexchange.com/questions/57834/how-to-get-raster-corner-coordinates-using-python-gdal-bindings
-    
+
     Parameters
     ----------
     gt : tuple or list
@@ -293,7 +293,7 @@ def get_extent(gt,cols,rows):
         number of columns in the dataset
     rows : int
         number of rows in the dataset
-        
+
     Returns
     -------
     list of floats

@@ -33,6 +33,7 @@ Remote Sensing 31, 3051–3064. doi:10.1080/01431160903154341
 
 import numpy as np
 from scipy.optimize import curve_fit
+from pylab import subplots
 
 def myR0(z,Rinf,Ad,g):
     """
@@ -123,6 +124,23 @@ def estAd(z,L,Rinf,g):
     z = np.repeat(np.atleast_3d(z), nbands, axis=2)
     Ad = (L - Rinf + Rinf * np.exp(-1*g*z)) / np.exp(-1*g*z)
     return Ad
+
+## Visualization #############################################################
+
+def albedo_parameter_plots(imarr, darr, params=None):
+    if params == None:
+        params = est_curve_params(darr, imarr)
+    fig, axs = subplots(2, 4, figsize=(14,8), sharey=True, sharex=True)
+    for i, ax in enumerate(axs.ravel()):
+        ax.scatter(darr.compressed(),imarr[...,i].compressed(), c='gold', alpha=0.2, edgecolor='none')
+        cp = params[i]
+        plotz = np.arange(darr.min(), darr.max(), 0.2)
+        ax.plot(plotz, myR0(plotz, *cp), c='goldenrod')
+        ax.set_xlabel('Depth')
+        ax.set_ylabel('Radiance')
+        btxt = "Band {}".format(i+1)
+        ax.set_title(btxt)
+    return params
 
 ## Testing Methods ###########################################################
 # This stuff is just for brewing up test data
