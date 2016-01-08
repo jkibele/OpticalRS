@@ -48,16 +48,25 @@ def point_sample_raster(gdf, rds, win_radius=0, stat_func=np.mean, col_names=Non
     winsize = 1 + win_radius * 2
     rast_poly = rds.raster_extent
     gt = rds.gdal_ds.GetGeoTransform()
-    outdf = gdf.copy()
+    subst = gdf[gdf.within(rast_poly)]
+    outdf = subst.copy()
     pointstatlist = []
-    for i in outdf.index:
-        geom = outdf.ix[i].geometry
-        if rast_poly.contains(geom):
-            px, py = map_to_pix(geom.x, geom.y, gt)
-            pointarr = rds.band_array_subset(px-win_radius,py-win_radius,winsize,winsize).reshape(-1,nbands)
-            pointstat = stat_func(pointarr,axis=0)
-            pointstatlist.append(pointstat)
-    banddf = gpd.GeoDataFrame(np.array(pointstatlist), columns=col_names)
+    if winsize == 1:
+        xs = outdf.geometry.map(lambda g: map_to_pix(g.x, g.y, gt)[0]).as_matrix()
+        ys = outdf.geometry.map(lambda g: map_to_pix(g.x, g.y, gt)[1]).as_matrix()
+        bandarr = rds.band_array
+        outarr = bandarr[ys, xs]
+        banddf = gpd.GeoDataFrame(outarr, columns=col_names, index=outdf.index)
+    else:
+        for i in outdf.index:
+            geom = outdf.ix[i].geometry
+            if rast_poly.contains(geom):
+                px, py = map_to_pix(geom.x, geom.y, gt)
+                print px, py
+                pointarr = rds.band_array_subset(px-win_radius,py-win_radius,winsize,winsize).reshape(-1,nbands)
+                pointstat = stat_func(pointarr,axis=0)
+                pointstatlist.append(pointstat)
+        banddf = gpd.GeoDataFrame(np.array(pointstatlist), columns=col_names, index=outdf.index)
     return outdf.join(banddf)
 
 def reproject_coords(coords,src_srs,tgt_srs):
@@ -116,6 +125,6 @@ def map_to_pix(x, y, gt):
     py : int
         y coordinate in pixel index units
     """
-    px = int((x - gt[0]) / gt[1])
-    py = int((y - gt[3]) / gt[5])
+    px = np.int((x - gt[0]) / gt[1])
+    py = np.int((y - gt[3]) / gt[5])
     return px, py

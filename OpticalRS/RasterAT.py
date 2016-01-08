@@ -144,7 +144,7 @@ class RAT(RasterDS):
         for i, col in enumerate(cols):
             def class_map(classnum):
                 if classnum in df.index:
-                    return df.loc[classnum, col]
+                    return df.loc[int(classnum), col]
                 else:
                     return np.nan
             vclass_map = np.vectorize(class_map)
