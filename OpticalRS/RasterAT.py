@@ -23,7 +23,7 @@ f_use_d = dict(zip(f_names, f_use))
 f_type_d = dict(zip(f_names, f_type))
 
 class RAT(RasterDS):
-    def __init__(self, rlayer, overwrite=False):
+    def __init__(self, rlayer, overwrite=True):
         RasterDS.__init__(self, rlayer, overwrite=overwrite)
         self.ratdf = self.__get_or_create_rat()
 
@@ -50,6 +50,11 @@ class RAT(RasterDS):
         """
         if df == None:
             df = self.ratdf
+        else:
+            self.ratdf = df
+
+        if not self.overwrite:
+            raise ValueError("RasterAT object is not set to allow overwriting of its file.")
         band = self.gdal_ds.GetRasterBand(1)
         grat = df_to_gdal_rat(df)
         ret = band.SetDefaultRAT(grat)
@@ -97,6 +102,11 @@ class RAT(RasterDS):
             return readrat
 
     def properties_df(self, img, func=np.mean, prefix=None, postfix='_b', colnames=None):
+        """
+        Sample values from `img` for each segment (a.k.a. class or class number)
+        in the RAT. `func` is used on the `img` pixels to produce a single value
+        for each segment.
+        """
         if isinstance(img, np.ndarray):
             img = img.copy()
         elif isinstance(img, RasterDS):
@@ -122,6 +132,24 @@ class RAT(RasterDS):
         newdf = pd.DataFrame(ddict, columns=colnames, index=self.ratdf.index)
         return newdf
 
+    def column_array(self, cols, df=None):
+        """
+        Produce an image array from values in the RAT.
+        """
+        if type(cols) == str:
+            cols = [cols]
+        if type(df) == type(None):
+            df = self.ratdf
+        outarr = np.repeat(self.band_array.astype(float), len(cols), axis=2)
+        for i, col in enumerate(cols):
+            def class_map(classnum):
+                if classnum in df.index:
+                    return df.loc[classnum, col]
+                else:
+                    return np.nan
+            vclass_map = np.vectorize(class_map)
+            outarr[...,i] = vclass_map(outarr[...,i])
+        return outarr
 
 def band_label_properties(labels, band, ind=None, func=np.mean, outdtype=np.float, default=0.0):
     if type(ind) == type(None):
