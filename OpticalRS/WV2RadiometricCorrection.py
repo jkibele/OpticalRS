@@ -226,6 +226,10 @@ def meanSunEl(xmlroot):
     """Get the mean sun elevation angle from the xml."""
     return float(xmlroot.find('IMD/IMAGE/MEANSUNEL').text)
 
+def meanOffNadirViewAngle(xmlroot):
+    """Get the mean off nadir view angle from the xml."""
+    return float(xmlroot.find('IMD/IMAGE/MEANOFFNADIRVIEWANGLE').text)
+
 def solarZenithAngle(xmlroot):
     """Calculate the solar zenith angle from the mean sun elevation."""
     return 90.0 - meanSunEl(xmlroot)
@@ -241,10 +245,16 @@ def earthSunDistance(xmlroot):
 ### End of Methods for dealing with WV2 xml ###############################
 
 def dark_pixel_finder(bandarr,prcnt=0.001):
-    """Find the darkest pixels in bandarr. Pixel darkness will be determined by
+    """
+    Note: I'm messing up the terminology here. I need to straighten this out.
+    You probably shouldn't use this unless you're sure you know what you're
+    doing.
+
+    Find the darkest pixels in bandarr. Pixel darkness will be determined by
     ranking pixels according to the mean of the pixel values across all bands
-    plus 2*std deviation. An array of the row,col coordinates of the darkest pixels will be
-    returned."""
+    plus 2*std deviation. An array of the row,col coordinates of the darkest
+    pixels will be returned.
+    """
     # build an array of darkness values that will be of the same dimensions
     # as an individual band of the image
     darkness = bandarr.mean(axis=0) + 2 * bandarr.std(axis=0)
@@ -260,7 +270,12 @@ def dark_pixel_finder(bandarr,prcnt=0.001):
     return coords.astype(np.int16)
 
 def dark_pixel_subtraction(bandarr,prcnt=0.001,verbose=False):
-    """This method uses the dark_pixel_finder method to get pixel coordinates for
+    """
+    Note: I'm messing up the terminology here. I need to straighten this out.
+    You probably shouldn't use this unless you're sure you know what you're
+    doing.
+
+    This method uses the dark_pixel_finder method to get pixel coordinates for
     the darkest pixels in the images and uses those pixels to calculate the value
     to subtract from each band in the image. If verbose is set to true, the values
     calculated for each band will be printed.
@@ -271,7 +286,8 @@ def dark_pixel_subtraction(bandarr,prcnt=0.001,verbose=False):
     water depth and bottom features. That was actually taken from Polcyn 1970, I
     think. The Bilko lesson uses the subtraction of 2 standard deviations as does
     Deidda and Sanna 2012 but I'm not seeing that subtraction in Polcyn 1970 and
-    Lyzenga 1978. """
+    Lyzenga 1978.
+    """
     coords = dark_pixel_finder(bandarr,prcnt)
     for bnum in range(len(bandarr)):
         barr = bandarr[bnum]

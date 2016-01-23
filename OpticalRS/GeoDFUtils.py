@@ -9,6 +9,49 @@ Methods to work with GeoDataFrames from GeoPandas.
 import geopandas as gpd
 from osgeo import osr
 import numpy as np
+from RasterDS import RasterDS
+
+class RasterShape(object):
+    """
+    Provide a object to make it more convenient to deal with a raster and a
+    shapefile.
+
+    Parameters
+    ----------
+    rds : RasterDS or string or QGIS raster layer
+        If `rds` is a RasterDS, then yay. If not, try to make a RasterDS out of
+        whatever `rds` is. RasterDS can take a filepath to a GDAL compatible
+        raster (like a GeoTiff) or a QGIS raster layer.
+    shp : GeoPandas.GeoDataFrame or string (filepath to a shapefile)
+        If `shp` is a GeoDataFrame, that will be used. Otherwise `shp` will be
+        assumed to be a filepath string and will be handed to
+        GeoPandas.read_file().
+    gdf_query : string or None
+        A string for the pandas query method:
+        http://pandas.pydata.org/pandas-docs/version/0.17.0/generated/pandas.DataFrame.query.html
+        Where a single geometry is used in a method: If `None` is passed, the
+        first geometry in the GeoDataFrame will be used. If a query is passed,
+        the first geometry in the query results will be used.
+    """
+    def __init__(self, rds, shp, gdf_query=None):
+        if type(rds).__name__ == 'RasterDS':
+            self.rds = rds
+        else:
+            self.rds = RasterDS(rds)
+
+        if type(shp).__name__ == 'GeoDataFrame':
+            self.gdf = shp
+        else:
+            self.gdf = gpd.read_file(shp)
+
+    def geometry_subset(self, gdf_query=None, all_touched=False):
+        if gdf_query == None:
+            geom = self.gdf.ix[0].geometry
+        else:
+            geom = gdf.query(gdf_query).ix[0].geometry
+
+        return self.rds.geometry_subset(geom, all_touched=all_touched)
+
 
 def point_sample_raster(gdf, rds, win_radius=0, stat_func=np.mean, col_names=None):
     """

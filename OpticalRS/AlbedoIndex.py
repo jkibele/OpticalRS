@@ -32,8 +32,11 @@ Remote Sensing 31, 3051–3064. doi:10.1080/01431160903154341
 """
 
 import numpy as np
+import pandas as pd
 from scipy.optimize import curve_fit
 from pylab import subplots
+from matplotlib.pyplot import tight_layout
+from Const import wv2_center_wavelength, jerlov_Kd
 
 def myR0(z,Rinf,Ad,g):
     """
@@ -52,7 +55,8 @@ def myR0(z,Rinf,Ad,g):
     Ad : float or array-like of same size as `z`.
         Irradiance reflectance (albedo) of the bottom.
     g : float
-        An effective attenuation coefficient of the water.
+        A 2 way effective attenuation coefficient of the water. Really
+        equivalent to attenuation coefficient (K) times geometric factor (g).
 
     Returns
     -------
@@ -61,7 +65,42 @@ def myR0(z,Rinf,Ad,g):
     """
     return Rinf + (Ad - Rinf) * np.exp(-1*g*z)
 
+def param_df(zsand, Rsand, p0=None, geometric_factor=2.0):
+    if Rsand.ndim > 2:
+        nbands = Rsand.shape[-1]
+    else:
+        nbands = 1
+    ind = wv2_center_wavelength[:nbands]
+    params = est_curve_params(zsand, Rsand, p0=p0)
+    cols = ['Rinf', 'Ad', 'Kg']
+    paramdf = pd.DataFrame(params, columns=cols, index=ind)
+    paramdf['K'] = paramdf.Kg / geometric_factor
+    return paramdf
+
 def est_curve_params(zsand, Rsand, p0=None):
+    """
+    Estimate `Rinf`, `Ad`, and `g` given sand depths `zsand` and corresponging
+    radiances `Rsand`. Estimate is made by curve fitting using
+    `scipy.optimize.curve_fit`.
+
+    Parameters
+    ----------
+    zsand : array-like
+        Depth of water column.
+    Rsand : array-like
+        Irradiance reflectance immediately below the water surface or, if you
+        want to ignore units, atmospheric correction, and whatnot, just
+        radiance values. This is a single band.
+    p0 : None, scalar, or N-length sequence, optional
+        Initial guess for the curve fitting parameters. If None, then the
+        initial values will all be 1
+
+    Returns
+    -------
+    np.array
+        A 3 column row of parameters for each band of `Rsand`. Column 1 is the
+        Rinf values, col 2 is the estAd values, and col 3 is the est_g values.
+    """
     nbands = Rsand.shape[-1]
     outlist = []
     for i in range(nbands):
@@ -92,9 +131,10 @@ def est_curve_params_one_band(zsand,Rsand,p0=None):
     estRinf : float
         Estimated irradiance reflectance of an optically deep water column.
     estAd : float
-        Estimated bottom albedo.
+        Estimated bottom albedo for `Rsand`.
     est_g : float
-        Estimated effective attenuation coefficient of the water.
+        Estimated 2 way effective attenuation coefficient of the water. Really
+        equivalent to attenuation coefficient (K) times geometric factor (g).
     """
     if np.ma.is_masked(zsand):
         zsand = zsand.compressed()
@@ -109,6 +149,25 @@ def estAd_single_band(z,L,Rinf,g):
     Estimate the albedo `Ad` for radiance `L` at depth `z` assuming `Rinf` and
     `g`. This method assumes that L is a single band and will return estimated
     Ad (albedo index) values for that single band.
+
+    Parameters
+    ----------
+    z : array-like
+        Depth of water column.
+    L : array-like
+        Irradiance reflectance immediately below the water surface or, if you
+        want to ignore units, atmospheric correction, and whatnot, just
+        radiance values. This is a single band.
+    Rinf : float
+        Irradiance reflectance of an optically deep water column.
+    g : float
+        A 2 way effective attenuation coefficient of the water. Really
+        equivalent to attenuation coefficient (K) times geometric factor (g).
+
+    Returns
+    -------
+    Ad : float or array-like of same size as `z`.
+        Irradiance reflectance (albedo) of the bottom.
     """
     Ad = (L - Rinf + Rinf * np.exp(-1*g*z)) / np.exp(-1*g*z)
     return Ad
@@ -117,6 +176,25 @@ def estAd(z,L,Rinf,g):
     """
     Estimate the albedo `Ad` for radiance `L` at depth `z` assuming `Rinf` and
     `g`.
+
+    Parameters
+    ----------
+    z : array-like
+        Depth of water column.
+    L : array-like
+        Irradiance reflectance immediately below the water surface or, if you
+        want to ignore units, atmospheric correction, and whatnot, just
+        radiance values. Shape: (rows, columns, bands)
+    Rinf : float
+        Irradiance reflectance of an optically deep water column.
+    g : float
+        A 2 way effective attenuation coefficient of the water. Really
+        equivalent to attenuation coefficient (K) times geometric factor (g).
+
+    Returns
+    -------
+    Ad : float or array-like of same shape as `L`.
+        Irradiance reflectance (albedo) of the bottom in each band.
     """
     nbands = L.shape[-1]
     Rinf = Rinf[:nbands]
@@ -124,6 +202,7 @@ def estAd(z,L,Rinf,g):
     z = np.repeat(np.atleast_3d(z), nbands, axis=2)
     Ad = (L - Rinf + Rinf * np.exp(-1*g*z)) / np.exp(-1*g*z)
     return Ad
+
 
 ## Visualization #############################################################
 
@@ -138,9 +217,23 @@ def albedo_parameter_plots(imarr, darr, params=None):
         ax.plot(plotz, myR0(plotz, *cp), c='goldenrod')
         ax.set_xlabel('Depth')
         ax.set_ylabel('Radiance')
-        btxt = "Band {}".format(i+1)
+        btxt = "Band{} $R_\infty = {:.2f}$\n$A_d = {:.2f}$, $Kg = {:.2f}$ ".format(i+1, *cp)
         ax.set_title(btxt)
-    return params
+    tight_layout()
+    return fig
+
+def jerlov_Kd_plot(paramdf):
+    from matplotlib.cm import summer_r
+    from matplotlib import style
+    style.use('ggplot')
+    jerlov_df = jerlov_Kd()
+    fig, ax = subplots(1,1, figsize=(8,6))
+    jerlov_df.plot(linestyle='--', cmap=summer_r, ax=ax)
+    paramdf.K.plot(ax=ax, marker='o')
+    tittxt = "$K$ Estimates vs. $K$ Values from Jerlov"
+    ax.set_ylim(0,paramdf.K.max() + 0.5 * paramdf.K.max())
+    blah = ax.set_title(tittxt)
+    return fig
 
 ## Testing Methods ###########################################################
 # This stuff is just for brewing up test data

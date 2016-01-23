@@ -192,7 +192,7 @@ class RasterDS(object):
             np.expand_dims(allbands,2)
         return allbands
 
-    def geometry_subset(self, geom):
+    def geometry_subset(self, geom, all_touched=False):
         """
         Return a subset of rds band array where the extent is the bounding box
         of geom and all cells outside of geom are masked.
@@ -208,7 +208,7 @@ class RasterDS(object):
             A numpy masked array of shape (Rows,Columns,Bands). Cells not within
             geom will be masked as will any values that were masked in rds.
         """
-        return masked_subset(self, geom)
+        return masked_subset(self, geom, all_touched=all_touched)
 
     def new_image_from_array(self,bandarr,outfilename=None,dtype=None,no_data_value=None):
         """
