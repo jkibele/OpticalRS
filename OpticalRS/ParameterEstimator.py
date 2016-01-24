@@ -5,12 +5,16 @@ from RasterDS import RasterDS
 from ArrayUtils import equalize_array_masks
 from AlbedoIndex import albedo_parameter_plots, est_curve_params, param_df, jerlov_Kd_plot
 from WV2RadiometricCorrection import get_xmlroot, meanSunEl, meanOffNadirViewAngle
+from Lyzenga2006 import dark_pixel_array
+from Lyzenga1978 import regression_plot, regressions
+from Const import wv2_center_wavelength, jerlov_Kd
 import numpy as np
 import geopandas as gpd
 import pandas as pd
 
 class ParameterEstimator(RasterShape):
-    def __init__(self, img_rds, depth_rds, sand_shp, gdf_query=None):
+    def __init__(self, img_rds, depth_rds, sand_shp, gdf_query=None, depth_range=None):
+        self.depth_range = depth_range
         if type(img_rds).__name__ == 'RasterDS':
             self.img_rds = img_rds
         else:
@@ -27,12 +31,14 @@ class ParameterEstimator(RasterShape):
             self.gdf = gpd.read_file(sand_shp)
 
         self.gdf_query = gdf_query
-        imarr, darr = equalize_array_masks(self._full_image_array, self._full_depth_array)
-        self.image_array = imarr
-        self.depth_array = darr.squeeze()
+        self.full_image_array = self.img_rds.band_array
+
+        self._set_arrays()
+
+
 
     @property
-    def _full_image_array(self):
+    def _unequal_image_subset(self):
         """
         The image array masked outside of the geometry. The mask on this array
         may not match the mask on the depth array.
@@ -40,36 +46,95 @@ class ParameterEstimator(RasterShape):
         return self.img_rds.geometry_subset(self.geometry)
 
     @property
-    def _full_depth_array(self):
+    def _unequal_depth_subset(self):
         """
         The depth array masked outside of the geometry. The mask on this array
         may not match the mask on the image array.
         """
-        return self.depth_rds.geometry_subset(self.geometry).squeeze()
+        darr = self.depth_rds.geometry_subset(self.geometry).squeeze()
+        if type(self.depth_range).__name__ != 'NoneType':
+            darr = np.ma.masked_outside(darr, *self.depth_range)
+        return darr
 
-    def same_geotransform(self):
+    def set_depth_range(self, depth_range):
+        self.depth_range = depth_range
+        self._set_arrays()
+
+    def _set_arrays(self):
+        imarr, darr = equalize_array_masks(self._unequal_image_subset, self._unequal_depth_subset)
+        self.image_subset_array = imarr
+        self.depth_subset_array = darr.squeeze()
+        return True
+
+    def same_resolution(self, print_res=False):
         """
         Check if the gdal geotransforms match for the rasters. If they match,
         the resolutions are the same.
         """
-        gt1 = img_rds.gdal_ds.GetGeoTransform()
-        gt2 = depth_rds.gdal_ds.GetGeoTransform()
+        gt1 = np.array(self.img_rds.gdal_ds.GetGeoTransform())[[1,5]]
+        gt2 = np.array(self.depth_rds.gdal_ds.GetGeoTransform())[[1,5]]
+        if print_res:
+            print gt1, gt2
         return np.allclose(gt1, gt2)
 
     @property
     def geometry(self):
+        """
+        Return a single geometry from `self.gdf` (the GeoDataFrame representation
+        of `sand_shp`). If `gdf_query` has not been set, the geometry returned
+        will just be the first geometry in `sand_shp`. If `gdf_query` has been
+        set, the returned geometry will be the first one returned by that query.
+
+        Returns
+        -------
+        shapely.geometry
+            A geometry shapely (https://pypi.python.org/pypi/Shapely) geometry
+            object.
+
+        """
         if self.gdf_query == None:
             geom = self.gdf.ix[0].geometry
         else:
             geom = gdf.query(self.gdf_query).ix[0].geometry
         return geom
 
+    def deep_water_means(self, p=10, win_size=3, win_percentage=50):
+        dpa = dark_pixel_array(self.full_image_array, p=p, win_size=win_size,
+                               win_percentage=win_percentage)
+        deep_water_means = dpa.reshape(-1,dpa.shape[-1]).mean(0)
+        return deep_water_means.data
+
+    def linear_parameters(self, deep_water_means=None, geometric_factor=2.0):
+        if type(deep_water_means).__name__ == 'NoneType':
+            dwm = self.deep_water_means()
+        else:
+            dwm = deep_water_means
+        X = np.ma.log(self.image_subset_array - dwm)
+        X, Xdepth = equalize_array_masks(X, self.depth_subset_array)
+        params = regressions(Xdepth, X)
+        Kg_arr = -1 * params[0]
+        nbands = np.atleast_3d(X).shape[-1]
+        pardf = pd.DataFrame(Kg_arr, columns=["Kg"],
+                             index=wv2_center_wavelength[:nbands])
+        pardf['K'] = pardf.Kg / geometric_factor
+        return pardf
+
+    def linear_fit_plot(self, deep_water_means=None):
+        if type(deep_water_means).__name__ == 'NoneType':
+            dwm = self.deep_water_means()
+        else:
+            dwm = deep_water_means
+        X = np.ma.log(self.image_subset_array - dwm)
+        X, Xdepth = equalize_array_masks(X, self.depth_subset_array)
+        fig = regression_plot(Xdepth, X)
+        return fig
+
     def curve_fit_parameters(self, geometric_factor=2.0):
-        paramdf = param_df(self.depth_array, self.image_array, geometric_factor=geometric_factor)
+        paramdf = param_df(self.depth_subset_array, self.image_subset_array, geometric_factor=geometric_factor)
         return paramdf
 
     def curve_fit_plots(self, params=None):
-        return albedo_parameter_plots(self.image_array, self.depth_array, params=params)
+        return albedo_parameter_plots(self.image_subset_array, self.depth_subset_array, params=params)
 
     def K_comparison_plot(self, paramdf):
         return jerlov_Kd_plot(paramdf)

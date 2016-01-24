@@ -47,7 +47,8 @@ def regressions(Z,X):
     Z : np.ma.MaskedArray
         Array of depth values repeated for each band so that Z.shape==X.shape.
         The mask needs to be the same too so that Z.mask==X.mask for all the
-        bands.
+        bands. If `Z` is only a single band, an attempt will be made to repeat
+        it the correct number of times.
     X : np.ma.MaskedArray
         The array of log transformed radiance values from equation B1 of
         Lyzenga 1978.
@@ -60,6 +61,8 @@ def regressions(Z,X):
         would be (b_i, a_i, r_value_i) for each band.
     """
     nbands = X.shape[-1]
+    if np.atleast_3d(Z).shape[-1] == 1:
+        Z = np.repeat(np.atleast_3d(Z), nbands, 2)
     slopes = []
     intercepts = []
     rvals = []
@@ -270,12 +273,14 @@ def regression_plot(Z,X,band_names=None):
 
     Returns
     -------
-    Nothing
-        This method should display a figure. How that figure displays is
-        determined by matplotlib settings.
+    figure
+        A matplotlib figure.
     """
     if band_names is None:
         band_names = ['band'+str(i) for i in range(X.shape[-1])]
+    nbands = X.shape[-1]
+    if np.atleast_3d(Z).shape[-1] == 1:
+        Z = np.repeat(np.atleast_3d(Z), nbands, 2)
     fig, axs = plt.subplots( 4, 2, figsize=(10,20) )
     regs = regressions(Z,X)
     for i, ax in enumerate(axs.flatten()):
@@ -292,3 +297,4 @@ def regression_plot(Z,X,band_names=None):
         ax.set_xlabel( r'$z$' )
         ax.set_ylabel( r'$X_i$' )
         ax.legend()
+    return fig
