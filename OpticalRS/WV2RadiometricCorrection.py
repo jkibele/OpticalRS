@@ -350,7 +350,7 @@ def toa_reflectance(bandarr,absCal,effBand,eSun,distES,solarZenith):
     Use of WorldView-2 Imagery (see references.txt) bandarr here is an array for a single band."""
     toa_rad_arr = toa_radiance(bandarr,absCal,effBand)
     outarr = ( toa_rad_arr * (distES**2) * np.pi ) / ( eSun * np.cos( np.radians(solarZenith) ) )
-    return outarr
+    return np.clip(outarr, 0.0, 1.0)
 
 def toa_reflectance_multiband(bandarr,xmlorimagepath):
     """Take a band array (bandarr) representing a raster with multiple bands and

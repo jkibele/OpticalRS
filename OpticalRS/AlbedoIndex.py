@@ -207,6 +207,8 @@ def estAd(z,L,Rinf,g):
 ## Visualization #############################################################
 
 def albedo_parameter_plots(imarr, darr, params=None):
+    from matplotlib import style
+    style.use('ggplot')
     if params == None:
         params = est_curve_params(darr, imarr)
     fig, axs = subplots(2, 4, figsize=(14,8), sharey=True, sharex=True)
@@ -220,19 +222,6 @@ def albedo_parameter_plots(imarr, darr, params=None):
         btxt = "Band{} $R_\infty = {:.2f}$\n$A_d = {:.2f}$, $Kg = {:.2f}$ ".format(i+1, *cp)
         ax.set_title(btxt)
     tight_layout()
-    return fig
-
-def jerlov_Kd_plot(paramdf):
-    from matplotlib.cm import summer_r
-    from matplotlib import style
-    style.use('ggplot')
-    jerlov_df = jerlov_Kd()
-    fig, ax = subplots(1,1, figsize=(8,6))
-    jerlov_df.plot(linestyle='--', cmap=summer_r, ax=ax)
-    paramdf.K.plot(ax=ax, marker='o')
-    tittxt = "$K$ Estimates vs. $K$ Values from Jerlov"
-    ax.set_ylim(0,paramdf.K.max() + 0.5 * paramdf.K.max())
-    blah = ax.set_title(tittxt)
     return fig
 
 ## Testing Methods ###########################################################

@@ -3,11 +3,12 @@
 from GeoDFUtils import RasterShape
 from RasterDS import RasterDS
 from ArrayUtils import equalize_array_masks
-from AlbedoIndex import albedo_parameter_plots, est_curve_params, param_df, jerlov_Kd_plot
+from AlbedoIndex import albedo_parameter_plots, est_curve_params, param_df
 from WV2RadiometricCorrection import get_xmlroot, meanSunEl, meanOffNadirViewAngle
 from Lyzenga2006 import dark_pixel_array
 from Lyzenga1978 import regression_plot, regressions
 from Const import wv2_center_wavelength, jerlov_Kd
+from pylab import subplots
 import numpy as np
 import geopandas as gpd
 import pandas as pd
@@ -35,7 +36,13 @@ class ParameterEstimator(RasterShape):
 
         self._set_arrays()
 
-
+    def copy(self, gdf_query="unchanged", depth_range="unchanged"):
+        if gdf_query is "unchanged":
+            gdf_query = self.gdf_query
+        if depth_range is "unchanged":
+            depth_range = self.depth_range
+        return ParameterEstimator(self.img_rds, self.depth_rds, self.gdf,
+                                  gdf_query, depth_range)
 
     @property
     def _unequal_image_subset(self):
@@ -136,8 +143,8 @@ class ParameterEstimator(RasterShape):
     def curve_fit_plots(self, params=None):
         return albedo_parameter_plots(self.image_subset_array, self.depth_subset_array, params=params)
 
-    def K_comparison_plot(self, paramdf):
-        return jerlov_Kd_plot(paramdf)
+    def K_comparison_plot(self, paramdf, columns='K', figure_title="$K$ Estimates vs. $K$ Values from Jerlov"):
+        return jerlov_Kd_plot(paramdf, columns, figure_title)
 
 ## Geometric Factor #######################################################
 #     Methods for finding the geometric factor 'g'. Not to be confused with
@@ -205,3 +212,19 @@ def geometric_factor_from_imd(imd_path):
     sun_el = meanSunEl(xmlroot)
     off_nad = meanOffNadirViewAngle(xmlroot)
     return geometric_factor(sun_el, off_nad)
+
+## Visualization ###########################################################
+
+def jerlov_Kd_plot(paramdf, columns='K', figure_title="$K$ Estimates vs. $K$ Values from Jerlov"):
+    from matplotlib.cm import summer_r
+    from matplotlib import style
+    style.use('ggplot')
+    jerlov_df = jerlov_Kd()
+    fig, ax = subplots(1,1, figsize=(8,6))
+    jerlov_df.plot(linestyle='--', cmap=summer_r, ax=ax)
+    if paramdf is not None:
+        paramdf[columns].plot(ax=ax, marker='o')
+        maxval = paramdf[columns].as_matrix().max()
+        ax.set_ylim(0,maxval + 0.5 * maxval)
+    blah = ax.set_title(figure_title)
+    return fig

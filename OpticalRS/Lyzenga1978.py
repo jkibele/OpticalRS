@@ -289,7 +289,8 @@ def regression_plot(Z,X,band_names=None):
         y = X[...,i].compressed()
         smth = lowess(y,x,frac=0.2)
         ax.scatter( x, y, alpha=0.05, edgecolor='none' )
-        ax.plot(smth.T[0],smth.T[1],c='white',alpha=0.75)
+        ax.plot(smth.T[0],smth.T[1],c='white',alpha=0.9)
+        ax.plot(smth.T[0],smth.T[1],c='black',alpha=0.75,linestyle='--')
         reglabel = "b=%.2f, r=%.2f" % (slp,rval)
         f = lambda x: incpt + slp * x
         ax.plot( x, f(x), c='r', label=reglabel )
