@@ -33,13 +33,13 @@
     <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="clip20151201225146489" name="clip">
       <customproperties/>
     </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="knn_depth_est20151215123622569" name="knn_depth_est">
+    <layer-tree-layer expanded="1" checked="Qt::Checked" id="knn_depth_est20151215123622569" name="knn_depth_est">
       <customproperties/>
     </layer-tree-layer>
     <layer-tree-layer expanded="1" checked="Qt::Checked" id="Ad_no_denoise20160103152730979" name="Ad_no_denoise">
       <customproperties/>
     </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Checked" id="Ad_index2_Rinf20151215192407110" name="Ad_index2_Rinf">
+    <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="Ad_index2_Rinf20151215192407110" name="Ad_index2_Rinf">
       <customproperties/>
     </layer-tree-layer>
     <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="Ad_index_Rinf20151215130447253" name="Ad_index_Rinf">
@@ -51,7 +51,7 @@
     <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="eReefDepth20151201225609874" name="eReefDepth">
       <customproperties/>
     </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Checked" id="eReefWV2_denoised20151214124140339" name="eReefWV2_denoised">
+    <layer-tree-layer expanded="1" checked="Qt::Unchecked" id="eReefWV2_denoised20151214124140339" name="eReefWV2_denoised">
       <customproperties/>
     </layer-tree-layer>
     <layer-tree-layer expanded="1" checked="Qt::Checked" id="eReefWV220151201225105726" name="eReefWV2">
@@ -65,10 +65,10 @@
   <mapcanvas>
     <units>meters</units>
     <extent>
-      <xmin>301642.48424061154946685</xmin>
-      <ymin>5979333.74940641038119793</ymin>
-      <xmax>302717.68424061452969909</xmax>
-      <ymax>5980466.67826547287404537</ymax>
+      <xmin>300311.11242852901341394</xmin>
+      <ymin>5983842.01249366626143456</ymin>
+      <xmax>301386.31242853199364617</xmax>
+      <ymax>5984974.941352728754282</ymax>
     </extent>
     <rotation>0</rotation>
     <projections>0</projections>
@@ -160,9 +160,9 @@
         <legendlayerfile isInOverview="0" layerid="clip20151201225146489" visible="0"/>
       </filegroup>
     </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="knn_depth_est" showFeatureCount="0">
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="knn_depth_est" showFeatureCount="0">
       <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="knn_depth_est20151215123622569" visible="0"/>
+        <legendlayerfile isInOverview="0" layerid="knn_depth_est20151215123622569" visible="1"/>
       </filegroup>
     </legendlayer>
     <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="Ad_no_denoise" showFeatureCount="0">
@@ -170,9 +170,9 @@
         <legendlayerfile isInOverview="0" layerid="Ad_no_denoise20160103152730979" visible="1"/>
       </filegroup>
     </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="Ad_index2_Rinf" showFeatureCount="0">
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="Ad_index2_Rinf" showFeatureCount="0">
       <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="Ad_index2_Rinf20151215192407110" visible="1"/>
+        <legendlayerfile isInOverview="0" layerid="Ad_index2_Rinf20151215192407110" visible="0"/>
       </filegroup>
     </legendlayer>
     <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="Ad_index_Rinf" showFeatureCount="0">
@@ -190,9 +190,9 @@
         <legendlayerfile isInOverview="0" layerid="eReefDepth20151201225609874" visible="0"/>
       </filegroup>
     </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="eReefWV2_denoised" showFeatureCount="0">
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="eReefWV2_denoised" showFeatureCount="0">
       <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="eReefWV2_denoised20151214124140339" visible="1"/>
+        <legendlayerfile isInOverview="0" layerid="eReefWV2_denoised20151214124140339" visible="0"/>
       </filegroup>
     </legendlayer>
     <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="eReefWV2" showFeatureCount="0">
@@ -591,21 +591,21 @@
         <map-layer-style name=""/>
       </map-layer-style-manager>
       <pipe>
-        <rasterrenderer opacity="1" alphaBand="0" blueBand="1" greenBand="2" type="multibandcolor" redBand="3">
+        <rasterrenderer opacity="1" alphaBand="-1" blueBand="2" greenBand="3" type="multibandcolor" redBand="4">
           <rasterTransparency/>
           <redContrastEnhancement>
-            <minValue>161</minValue>
-            <maxValue>476</maxValue>
+            <minValue>154</minValue>
+            <maxValue>560</maxValue>
             <algorithm>StretchToMinimumMaximum</algorithm>
           </redContrastEnhancement>
           <greenContrastEnhancement>
-            <minValue>194</minValue>
-            <maxValue>345</maxValue>
+            <minValue>182</minValue>
+            <maxValue>434</maxValue>
             <algorithm>StretchToMinimumMaximum</algorithm>
           </greenContrastEnhancement>
           <blueContrastEnhancement>
-            <minValue>296</minValue>
-            <maxValue>632</maxValue>
+            <minValue>197</minValue>
+            <maxValue>315</maxValue>
             <algorithm>StretchToMinimumMaximum</algorithm>
           </blueContrastEnhancement>
         </rasterrenderer>
@@ -2338,8 +2338,6 @@
             </layer>
           </symbol>
         </source-symbol>
-        <colorramp type="randomcolors" name="[source]"/>
-        <invertedcolorramp value="0"/>
         <rotation/>
         <sizescale scalemethod="diameter"/>
       </renderer-v2>
@@ -2520,13 +2518,14 @@
       <SingleCategoryDiagramRenderer diagramType="Pie">
         <DiagramCategory penColor="#000000" labelPlacementMethod="XHeight" penWidth="0" diagramOrientation="Up" minimumSize="0" barWidth="5" penAlpha="255" maxScaleDenominator="1e+08" backgroundColor="#ffffff" transparency="0" width="15" scaleDependency="Area" backgroundAlpha="255" angleOffset="1440" scaleBasedVisibility="0" enabled="0" height="15" sizeType="MM" minScaleDenominator="-4.65661e-10">
           <fontProperties description="Ubuntu,11,-1,5,50,0,0,0,0,0" style=""/>
+          <attribute field="" color="#000000" label=""/>
         </DiagramCategory>
       </SingleCategoryDiagramRenderer>
       <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="0" dist="0" xPosColumn="-1" priority="0" obstacle="0" showAll="1"/>
-      <editform></editform>
+      <editform>.</editform>
       <editforminit/>
       <featformsuppress>0</featformsuppress>
-      <annotationform></annotationform>
+      <annotationform>.</annotationform>
       <editorlayout>generatedlayout</editorlayout>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -2970,18 +2969,18 @@
         <rasterrenderer opacity="1" alphaBand="-1" blueBand="2" greenBand="3" type="multibandcolor" redBand="4">
           <rasterTransparency/>
           <redContrastEnhancement>
-            <minValue>149</minValue>
-            <maxValue>267</maxValue>
+            <minValue>154</minValue>
+            <maxValue>560</maxValue>
             <algorithm>StretchToMinimumMaximum</algorithm>
           </redContrastEnhancement>
           <greenContrastEnhancement>
-            <minValue>181</minValue>
-            <maxValue>289</maxValue>
+            <minValue>182</minValue>
+            <maxValue>434</maxValue>
             <algorithm>StretchToMinimumMaximum</algorithm>
           </greenContrastEnhancement>
           <blueContrastEnhancement>
-            <minValue>199</minValue>
-            <maxValue>254</maxValue>
+            <minValue>197</minValue>
+            <maxValue>315</maxValue>
             <algorithm>StretchToMinimumMaximum</algorithm>
           </blueContrastEnhancement>
         </rasterrenderer>
