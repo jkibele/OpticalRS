@@ -14,6 +14,7 @@ from osgeo.gdalconst import *
 from osgeo.gdal_array import NumericTypeCodeToGDALTypeCode
 import numpy as np
 from RasterSubset import masked_subset
+from shapely.geometry import Polygon as shpPoly
 
 class RasterDS(object):
     """
@@ -90,6 +91,24 @@ class RasterDS(object):
         """
         srs = osr.SpatialReference(wkt=self.projection_wkt)
         return int( srs.GetAttrValue('AUTHORITY',1) )
+
+    @property
+    def raster_extent_list(self):
+        """
+        Get the extent of the raster as a list of coordinates.
+        """
+        gds = self.gdal_ds
+        gt = gds.GetGeoTransform()
+        cols = gds.RasterXSize
+        rows = gds.RasterYSize
+        return get_extent(gt, cols, rows)
+
+    @property
+    def raster_extent(self):
+        """
+        Get a shapely polygon representation of the raster extent.
+        """
+        return shpPoly(self.raster_extent_list)
 
     @property
     def output_file_path(self):
@@ -173,7 +192,7 @@ class RasterDS(object):
             np.expand_dims(allbands,2)
         return allbands
 
-    def geometry_subset(self, geom):
+    def geometry_subset(self, geom, all_touched=False):
         """
         Return a subset of rds band array where the extent is the bounding box
         of geom and all cells outside of geom are masked.
@@ -189,7 +208,7 @@ class RasterDS(object):
             A numpy masked array of shape (Rows,Columns,Bands). Cells not within
             geom will be masked as will any values that were masked in rds.
         """
-        return masked_subset(self, geom)
+        return masked_subset(self, geom, all_touched=all_touched)
 
     def new_image_from_array(self,bandarr,outfilename=None,dtype=None,no_data_value=None):
         """
@@ -260,6 +279,38 @@ class RasterDS(object):
             outfilename = self.output_file_path()
         output_gtif_like_img(self.gdal_ds, bandarr, outfilename, no_data_value=no_data_value, dtype=dtype)
         return RasterDS(outfilename)
+
+def get_extent(gt,cols,rows):
+    """
+    Return list of corner coordinates from a geotransform. This code was taken
+    from: http://gis.stackexchange.com/questions/57834/how-to-get-raster-corner-coordinates-using-python-gdal-bindings
+
+    Parameters
+    ----------
+    gt : tuple or list
+        geotransform
+    cols : int
+        number of columns in the dataset
+    rows : int
+        number of rows in the dataset
+
+    Returns
+    -------
+    list of floats
+        Coordinates of each corner
+    """
+    ext=[]
+    xarr=[0,cols]
+    yarr=[0,rows]
+
+    for px in xarr:
+        for py in yarr:
+            x=gt[0]+(px*gt[1])+(py*gt[2])
+            y=gt[3]+(px*gt[4])+(py*gt[5])
+            ext.append([x,y])
+#            print x,y
+        yarr.reverse()
+    return ext
 
 def output_gtif(bandarr, cols, rows, outfilename, geotransform, projection, no_data_value=-99, driver_name='GTiff', dtype=GDT_Float32):
     """

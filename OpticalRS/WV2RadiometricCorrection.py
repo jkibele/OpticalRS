@@ -102,9 +102,7 @@ def output_gtif_like_img(img, bandarr, outfilename, no_data_value=-99, dtype=GDT
 
 ## End of Raster Handling stuff ################################################
 
-"""I have to make a dictionary of Band-Averaged Solar Spectral Irradiance because
-DigitalGlobe apparently could not be bothered to include these values in the xml.
-These values are taken from Table 4 in DigitalGlobe's Radiometric Use of WorldView-2
+"""These values are taken from Table 4 in DigitalGlobe's Radiometric Use of WorldView-2
 Imagery technical note. See references.txt for more info."""
 Esun_od = OrderedDict((
         ('BAND_C', 1758.2229),
@@ -228,6 +226,10 @@ def meanSunEl(xmlroot):
     """Get the mean sun elevation angle from the xml."""
     return float(xmlroot.find('IMD/IMAGE/MEANSUNEL').text)
 
+def meanOffNadirViewAngle(xmlroot):
+    """Get the mean off nadir view angle from the xml."""
+    return float(xmlroot.find('IMD/IMAGE/MEANOFFNADIRVIEWANGLE').text)
+
 def solarZenithAngle(xmlroot):
     """Calculate the solar zenith angle from the mean sun elevation."""
     return 90.0 - meanSunEl(xmlroot)
@@ -243,10 +245,16 @@ def earthSunDistance(xmlroot):
 ### End of Methods for dealing with WV2 xml ###############################
 
 def dark_pixel_finder(bandarr,prcnt=0.001):
-    """Find the darkest pixels in bandarr. Pixel darkness will be determined by
+    """
+    Note: I'm messing up the terminology here. I need to straighten this out.
+    You probably shouldn't use this unless you're sure you know what you're
+    doing.
+
+    Find the darkest pixels in bandarr. Pixel darkness will be determined by
     ranking pixels according to the mean of the pixel values across all bands
-    plus 2*std deviation. An array of the row,col coordinates of the darkest pixels will be
-    returned."""
+    plus 2*std deviation. An array of the row,col coordinates of the darkest
+    pixels will be returned.
+    """
     # build an array of darkness values that will be of the same dimensions
     # as an individual band of the image
     darkness = bandarr.mean(axis=0) + 2 * bandarr.std(axis=0)
@@ -262,7 +270,12 @@ def dark_pixel_finder(bandarr,prcnt=0.001):
     return coords.astype(np.int16)
 
 def dark_pixel_subtraction(bandarr,prcnt=0.001,verbose=False):
-    """This method uses the dark_pixel_finder method to get pixel coordinates for
+    """
+    Note: I'm messing up the terminology here. I need to straighten this out.
+    You probably shouldn't use this unless you're sure you know what you're
+    doing.
+
+    This method uses the dark_pixel_finder method to get pixel coordinates for
     the darkest pixels in the images and uses those pixels to calculate the value
     to subtract from each band in the image. If verbose is set to true, the values
     calculated for each band will be printed.
@@ -273,7 +286,8 @@ def dark_pixel_subtraction(bandarr,prcnt=0.001,verbose=False):
     water depth and bottom features. That was actually taken from Polcyn 1970, I
     think. The Bilko lesson uses the subtraction of 2 standard deviations as does
     Deidda and Sanna 2012 but I'm not seeing that subtraction in Polcyn 1970 and
-    Lyzenga 1978. """
+    Lyzenga 1978.
+    """
     coords = dark_pixel_finder(bandarr,prcnt)
     for bnum in range(len(bandarr)):
         barr = bandarr[bnum]
@@ -336,7 +350,7 @@ def toa_reflectance(bandarr,absCal,effBand,eSun,distES,solarZenith):
     Use of WorldView-2 Imagery (see references.txt) bandarr here is an array for a single band."""
     toa_rad_arr = toa_radiance(bandarr,absCal,effBand)
     outarr = ( toa_rad_arr * (distES**2) * np.pi ) / ( eSun * np.cos( np.radians(solarZenith) ) )
-    return outarr
+    return np.clip(outarr, 0.0, 1.0)
 
 def toa_reflectance_multiband(bandarr,xmlorimagepath):
     """Take a band array (bandarr) representing a raster with multiple bands and

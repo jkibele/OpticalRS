@@ -244,6 +244,7 @@ def dark_pixels( imarr, p=10 ):
     dark_pix = ( brt <= dim_thresh )
     if np.ma.is_masked( dark_pix ):
         dark_pix.set_fill_value( False )
+        dark_pix = dark_pix.filled()
     return dark_pix
 
 def moving_window( dark_arr, win_size=3 ):
@@ -341,7 +342,7 @@ def dark_pixel_array( imarr, p=10, win_size=3, win_percentage=50 ):
     """
     dp = dark_kernels( imarr, p, win_size, win_percentage )
     dparr = imarr.copy()
-    dparr.mask = ~np.repeat( np.expand_dims( dp.filled(), 2 ), 8, 2 )
+    dparr.mask = ~np.repeat( np.atleast_3d(dp), 8, 2 )
     return dparr
 
 def bg_thresholds( dark_arr, n_std=3 ):

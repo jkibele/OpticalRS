@@ -5,6 +5,7 @@
 ##Output_raster=output raster
 
 from OpticalRS import Sagawa2010, RasterDS, RasterSubset
+from OpticalRS.ArrayUtils import equalize_array_masks
 import geopandas as gpd
 from processing.core.GeoAlgorithmExecutionException import GeoAlgorithmExecutionException
 
@@ -17,14 +18,18 @@ geom = ss.iloc[0].geometry
 
 # get masked subsets of the rasters to calculate geometric/attenuation
 # coefficients.
-imarr = RasterSubset.masked_subset( imrds, geom )
-deptharr = RasterSubset.masked_subset( depthrds, geom )
+sandim = RasterSubset.masked_subset( imrds, geom )
+sanddep = RasterSubset.masked_subset( depthrds, geom ).squeeze()
+
+# make sure the masks match
+sandim, sanddep = equalize_array_masks(sandim, sanddep)
 
 # get coefficient for each band
-negKgs = Sagawa2010.negKg_array( imarr, deptharr.squeeze() )
+negKgs = Sagawa2010.negKg_array( sandim, sanddep )
 
 # calculate reflectance index
-sag_ri = Sagawa2010.reflectance_index( imrds.band_array, depthrds.band_array.squeeze(), negKgs )
+imarr, deptharr = equalize_array_masks(imrds.band_array, depthrds.band_array.squeeze() )
+sag_ri = Sagawa2010.reflectance_index( imarr, deptharr, negKgs )
 
 # save the output
 outrds = imrds.new_image_from_array(sag_ri,Output_raster)
