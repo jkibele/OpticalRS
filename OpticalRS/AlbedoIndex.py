@@ -6,7 +6,12 @@ AlbedoIndex
 Code for generating a depth invariant albedo index from multispectral imagery.
 This is a method of water column correction for habitat mapping. It is similar
 in concept to previous methods by Sagawa and Lyzenga but works in a different
-way. This method is the work of the author, Jared Kibele.
+way. This method is the work of the author, Jared Kibele. ...except that it's
+actually not. I've recently found that Purkis and Pasterkamp came up with the
+same thing (only slightly better) back in 2003. I'll either change the name of
+this module or just revamp the comments and documentation to attribute the
+method properly. ...and I have to add the 1/0.54 term to account for loss of
+transmission through the air-water interface.
 
 References
 ----------
@@ -24,6 +29,10 @@ doi:10.1364/AO.26.004123
 
 Philpot, W.D., 1989. Bathymetric mapping with passive multispectral imagery.
 Appl. Opt. 28, 1569–1578. doi:10.1364/AO.28.001569
+
+Purkis, S.J., Pasterkamp, R., 2003. Integrating in situ reef-top reflectance
+spectra with Landsat TM imagery to aid shallow-tropical benthic habitat mapping.
+Coral Reefs 23, 5–20. doi:10.1007/s00338-003-0351-0
 
 Sagawa, T., Boisnier, E., Komatsu, T., Mustapha, K.B., Hattour, A., Kosaka, N.,
 Miyazaki, S., 2010. Using bottom surface reflectance to map coastal marine
@@ -206,12 +215,12 @@ def estAd(z,L,Rinf,g):
 
 ## Visualization #############################################################
 
-def albedo_parameter_plots(imarr, darr, params=None):
+def albedo_parameter_plots(imarr, darr, params=None, figsize=(14,8)):
     from matplotlib import style
     style.use('ggplot')
     if params == None:
         params = est_curve_params(darr, imarr)
-    fig, axs = subplots(2, 4, figsize=(14,8), sharey=True, sharex=True)
+    fig, axs = subplots(2, 4, figsize=figsize, sharey=True, sharex=True)
     for i, ax in enumerate(axs.ravel()):
         ax.scatter(darr.compressed(),imarr[...,i].compressed(), c='gold', alpha=0.2, edgecolor='none')
         cp = params[i]

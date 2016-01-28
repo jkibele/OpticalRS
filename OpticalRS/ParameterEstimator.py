@@ -215,16 +215,23 @@ def geometric_factor_from_imd(imd_path):
 
 ## Visualization ###########################################################
 
-def jerlov_Kd_plot(paramdf, columns='K', figure_title="$K$ Estimates vs. $K$ Values from Jerlov"):
+def jerlov_Kd_plot(paramdf, columns='K', jerlov_legend=True,
+                    figure_title="$K$ Estimates vs. $K$ Values from Jerlov"):
     from matplotlib.cm import summer_r
     from matplotlib import style
     style.use('ggplot')
     jerlov_df = jerlov_Kd()
     fig, ax = subplots(1,1, figsize=(8,6))
-    jerlov_df.plot(linestyle='--', cmap=summer_r, ax=ax)
+
     if paramdf is not None:
-        paramdf[columns].plot(ax=ax, marker='o')
+        ax = paramdf[columns].plot(ax=ax, marker='o')
         maxval = paramdf[columns].as_matrix().max()
         ax.set_ylim(0,maxval + 0.5 * maxval)
     blah = ax.set_title(figure_title)
+    if not jerlov_legend:
+        ax.legend(loc='best', fancybox=True, framealpha=0.6, title=' ')
+    jerlov_df.plot(linestyle='--', cmap=summer_r, ax=ax, legend=jerlov_legend, zorder=0)
+    if jerlov_legend:
+        ax.legend(loc='best', fancybox=True, framealpha=0.6)
+
     return fig
