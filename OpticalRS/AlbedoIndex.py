@@ -222,10 +222,13 @@ def albedo_parameter_plots(imarr, darr, params=None, figsize=(14,8)):
         params = est_curve_params(darr, imarr)
     fig, axs = subplots(2, 4, figsize=figsize, sharey=True, sharex=True)
     for i, ax in enumerate(axs.ravel()):
+        if i >= imarr.shape[-1]:
+            print "Dooky"
+            continue
         ax.scatter(darr.compressed(),imarr[...,i].compressed(), c='gold', alpha=0.2, edgecolor='none')
         cp = params[i]
         plotz = np.arange(darr.min(), darr.max(), 0.2)
-        ax.plot(plotz, myR0(plotz, *cp), c='goldenrod')
+        ax.plot(plotz, myR0(plotz, *cp), c='brown')
         ax.set_xlabel('Depth')
         ax.set_ylabel('Radiance')
         btxt = "Band{} $R_\infty = {:.2f}$\n$A_d = {:.2f}$, $Kg = {:.2f}$ ".format(i+1, *cp)

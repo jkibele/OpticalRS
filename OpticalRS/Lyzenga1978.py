@@ -284,11 +284,14 @@ def regression_plot(Z,X,band_names=None,figsize=(14,7)):
     fig, axs = plt.subplots( 2, 4, figsize=figsize )
     regs = regressions(Z,X)
     for i, ax in enumerate(axs.flatten()):
+        if i > nbands-1:
+            continue
         slp, incpt, rval = regs[:,i]
         x = Z[...,i].compressed()
         y = X[...,i].compressed()
-        smth = lowess(y,x,frac=0.2)
+        # print "i = {}, x.shape = {}, y.shape = {}".format(i, x.shape, y.shape)
         ax.scatter( x, y, alpha=0.05, edgecolor='none' )
+        smth = lowess(y,x,frac=0.2)
         ax.plot(smth.T[0],smth.T[1],c='white',alpha=0.9)
         ax.plot(smth.T[0],smth.T[1],c='black',alpha=0.75,linestyle='--')
         reglabel = "b=%.2f, r=%.2f" % (slp,rval)
