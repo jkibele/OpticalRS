@@ -75,6 +75,38 @@ def myR0(z,Rinf,Ad,g):
     return Rinf + (Ad - Rinf) * np.exp(-1*g*z)
 
 def param_df(zsand, Rsand, p0=None, geometric_factor=2.0):
+    """
+    Estimate the curve parameters using `est_curve_params` and return the
+    results in a pandas dataframe.
+
+    Parameters
+    ----------
+    zsand : array-like
+        Depth of water column.
+    Rsand : array-like
+        Irradiance reflectance immediately below the water surface or, if you
+        want to ignore units, atmospheric correction, and whatnot, just
+        radiance values. This is a single band.
+    p0 : None, scalar, or N-length sequence, optional
+        Initial guess for the curve fitting parameters. If None, then the
+        initial values will all be 1
+    geometric_factor : float
+        The geometric factor 'g' used to calculate the attenuation coefficient
+        (K) from the estimated value for (Kg). For more information see the
+        docstring for `OpticalRS.ParameterEstimator.geometric_factor`. To
+        calculate the geometric factor for WorldView-2 imagery, you can use
+        `OpticalRS.ParameterEstimator.geometric_factor_from_imd`.
+
+    Returns
+    -------
+    pandas.dataframe
+        A data frame with columns for 'Rinf', 'Ad', 'Kg', and 'K'. Each row
+        represents one band of the imagery. Index is by wavelength for
+        WorldView-2 imagery. Contact the author if you'd like to use this with
+        some other type of imagery. It wouldn't be hard to change it to be more
+        general but I don't have time right now and there's a good chance I'll
+        forget all about it.
+    """
     if Rsand.ndim > 2:
         nbands = Rsand.shape[-1]
     else:
@@ -144,12 +176,20 @@ def est_curve_params_one_band(zsand,Rsand,p0=None):
     est_g : float
         Estimated 2 way effective attenuation coefficient of the water. Really
         equivalent to attenuation coefficient (K) times geometric factor (g).
+
+    Notes
+    -----
+    `curve_fit` was failing to find a solution when the image array (`Rsand`)
+    had a dtype of 'float64'. I don't really understand why that was a problem
+    but explicitly casting the arrays to 'float32' seems to work. `curve_fit`
+    uses `leastsq` which is a wrapper aound `MINPACK` which was writtin in
+    Fortran a long time ago so, for now, it'll have to remain a mystery.
     """
     if np.ma.is_masked(zsand):
         zsand = zsand.compressed()
     if np.ma.is_masked(Rsand):
         Rsand = Rsand.compressed()
-    p, pcov = curve_fit(myR0,zsand,Rsand,p0)
+    p, pcov = curve_fit(myR0,zsand.astype('float32'),Rsand.astype('float32'),p0)
     estRinf, estAd, est_g = p
     return estRinf, estAd, est_g
 
@@ -212,23 +252,34 @@ def estAd(z,L,Rinf,g):
     Ad = (L - Rinf + Rinf * np.exp(-1*g*z)) / np.exp(-1*g*z)
     return Ad
 
+def surface_reflectance_correction(imarr, nir_bands=[6,7]):
+    nbands = imarr.shape[-1]
+    nbandsvisible = nbands - len(nir_bands)
+    nir_mean = imarr[...,nir_bands].mean(2)
+    sbtrct = np.repeat(np.atleast_3d(nir_mean), nbandsvisible, axis=2)
+    corrected = imarr[...,:nbandsvisible] - sbtrct
+    return corrected
+
+def surface_refraction_correction(imarr):
+    return imarr * 0.54
 
 ## Visualization #############################################################
 
-def albedo_parameter_plots(imarr, darr, params=None, figsize=(14,8)):
+def albedo_parameter_plots(imarr, darr, params=None, plot_params=True, figsize=(14,8)):
     from matplotlib import style
     style.use('ggplot')
-    if params == None:
+    if params is None:
         params = est_curve_params(darr, imarr)
     fig, axs = subplots(2, 4, figsize=figsize, sharey=True, sharex=True)
     for i, ax in enumerate(axs.ravel()):
         if i >= imarr.shape[-1]:
-            print "Dooky"
+            # This means I've got more axes than image bands so I'll skip plotting
             continue
         ax.scatter(darr.compressed(),imarr[...,i].compressed(), c='gold', alpha=0.2, edgecolor='none')
         cp = params[i]
         plotz = np.arange(darr.min(), darr.max(), 0.2)
-        ax.plot(plotz, myR0(plotz, *cp), c='brown')
+        if plot_params:
+            ax.plot(plotz, myR0(plotz, *cp), c='brown')
         ax.set_xlabel('Depth')
         ax.set_ylabel('Radiance')
         btxt = "Band{} $R_\infty = {:.2f}$\n$A_d = {:.2f}$, $Kg = {:.2f}$ ".format(i+1, *cp)

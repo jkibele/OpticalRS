@@ -3,7 +3,8 @@
 from GeoDFUtils import RasterShape
 from RasterDS import RasterDS
 from ArrayUtils import equalize_array_masks
-from AlbedoIndex import albedo_parameter_plots, est_curve_params, param_df
+from AlbedoIndex import albedo_parameter_plots, est_curve_params, param_df,\
+                        surface_refraction_correction, surface_reflectance_correction
 from WV2RadiometricCorrection import get_xmlroot, meanSunEl, meanOffNadirViewAngle
 from Lyzenga2006 import dark_pixel_array
 from Lyzenga1978 import regression_plot, regressions
@@ -14,7 +15,16 @@ import geopandas as gpd
 import pandas as pd
 
 class ParameterEstimator(RasterShape):
-    def __init__(self, img_rds, depth_rds, sand_shp, gdf_query=None, depth_range=None):
+    """
+    An object to simplify the process of estimating some apparent optical
+    properties (AOPs). Most importantly, the diffuse attenuation coefficient (K).
+    I need to add more documentation.
+    """
+    def __init__(self, img_rds, depth_rds, sand_shp, gdf_query=None,
+                 depth_range=None, surface_refraction=False,
+                 surface_reflectance=False):
+        self.surf_reflectance = surface_reflectance
+        self.surf_refraction = surface_refraction
         self.depth_range = depth_range
         if type(img_rds).__name__ == 'RasterDS':
             self.img_rds = img_rds
@@ -32,17 +42,23 @@ class ParameterEstimator(RasterShape):
             self.gdf = gpd.read_file(sand_shp)
 
         self.gdf_query = gdf_query
-        self.full_image_array = self.img_rds.band_array
+        # self.full_image_array = self.img_rds.band_array
 
         self._set_arrays()
 
-    def copy(self, gdf_query="unchanged", depth_range="unchanged"):
+    def copy(self, gdf_query="unchanged", depth_range="unchanged",
+             surface_refraction="unchanged", surface_reflectance="unchanged"):
         if gdf_query is "unchanged":
             gdf_query = self.gdf_query
         if depth_range is "unchanged":
             depth_range = self.depth_range
+        if surface_refraction is "unchanged":
+            surface_refraction = self.surf_refraction
+        if surface_reflectance is "unchanged":
+            surface_reflectance = self.surf_reflectance
         return ParameterEstimator(self.img_rds, self.depth_rds, self.gdf,
-                                  gdf_query, depth_range)
+                                  gdf_query, depth_range, surface_refraction,
+                                  surface_reflectance)
 
     @property
     def _unequal_image_subset(self):
@@ -69,7 +85,24 @@ class ParameterEstimator(RasterShape):
 
     def _set_arrays(self):
         imarr, darr = equalize_array_masks(self._unequal_image_subset, self._unequal_depth_subset)
+        fullim = self.img_rds.band_array
+        if self.surf_refraction:
+            imarr = surface_refraction_correction(imarr)
+            fullim = surface_refraction_correction(fullim)
+        if self.surf_reflectance:
+            acceptable = ['ndarray','list','tuple']
+            if type(self.surf_reflectance).__name__ in acceptable:
+                imarr = surface_reflectance_correction(imarr, self.surf_reflectance)
+                fullim = surface_reflectance_correction(fullim, self.surf_reflectance)
+            elif self.surf_reflectance == True:
+                imarr = surface_reflectance_correction(imarr)
+                fullim = surface_reflectance_correction(fullim)
+            else:
+                raise TypeError("If self.surf_reflectance doesn't evaluate to \
+                            False, then it should be an ndarray, a list, or a \
+                            tuple.")
         self.image_subset_array = imarr
+        self.full_image_array = fullim
         self.depth_subset_array = darr.squeeze()
         return True
 
@@ -106,6 +139,14 @@ class ParameterEstimator(RasterShape):
         return geom
 
     def deep_water_means(self, p=10, win_size=3, win_percentage=50):
+        """
+        This is really the darkest pixel means base on brightness. In some cases
+        this may select shallow water over a dark bottom rather than selecting
+        deep water. If you're using this for the Lyzenga log transformation, you
+        probably don't want that. For more information see the docstrings in
+        `OpticalRS.Lyzenga2006`. You can use `dark_pixel_array` to figure out
+        which pixels are actually being selected.
+        """
         dpa = dark_pixel_array(self.full_image_array, p=p, win_size=win_size,
                                win_percentage=win_percentage)
         deep_water_means = dpa.reshape(-1,dpa.shape[-1]).mean(0)
@@ -137,11 +178,14 @@ class ParameterEstimator(RasterShape):
         return fig
 
     def curve_fit_parameters(self, geometric_factor=2.0):
-        paramdf = param_df(self.depth_subset_array, self.image_subset_array, geometric_factor=geometric_factor)
+        paramdf = param_df(self.depth_subset_array, self.image_subset_array,
+                            geometric_factor=geometric_factor)
         return paramdf
 
-    def curve_fit_plots(self, params=None):
-        return albedo_parameter_plots(self.image_subset_array, self.depth_subset_array, params=params)
+    def curve_fit_plots(self, params=None, plot_params=True):
+        return albedo_parameter_plots(self.image_subset_array,
+                                        self.depth_subset_array, params=params,
+                                        plot_params=plot_params)
 
     def K_comparison_plot(self, paramdf, columns='K', figure_title="$K$ Estimates vs. $K$ Values from Jerlov"):
         return jerlov_Kd_plot(paramdf, columns, figure_title)
@@ -216,7 +260,7 @@ def geometric_factor_from_imd(imd_path):
 ## Visualization ###########################################################
 
 def jerlov_Kd_plot(paramdf, columns='K', jerlov_legend=True,
-                    figure_title="$K$ Estimates vs. $K$ Values from Jerlov",
+                    figure_title="$K$ Estimates and $K$ Values from Jerlov",
                     legend_loc='best'):
     from matplotlib.cm import summer_r
     from matplotlib import style
@@ -234,5 +278,7 @@ def jerlov_Kd_plot(paramdf, columns='K', jerlov_legend=True,
     jerlov_df.plot(linestyle='--', cmap=summer_r, ax=ax, legend=jerlov_legend, zorder=0)
     if jerlov_legend:
         ax.legend(loc=legend_loc, fancybox=True, framealpha=0.6)
+    ax.set_ylabel("Attenuation ($m^{-1}$)")
+    ax.set_xlabel("Wavelength ($nm$)")
 
     return fig
