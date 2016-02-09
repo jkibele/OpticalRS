@@ -270,7 +270,7 @@ def albedo_parameter_plots(imarr, darr, params=None, plot_params=True, figsize=(
     style.use('ggplot')
     if params is None:
         params = est_curve_params(darr, imarr)
-    fig, axs = subplots(2, 4, figsize=figsize, sharey=True, sharex=True)
+    fig, axs = subplots(2, 4, figsize=figsize, sharey=False, sharex=True)
     for i, ax in enumerate(axs.ravel()):
         if i >= imarr.shape[-1]:
             # This means I've got more axes than image bands so I'll skip plotting

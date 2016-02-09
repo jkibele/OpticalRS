@@ -35,6 +35,7 @@ from scipy.stats import linregress
 import numpy as np
 from matplotlib import pyplot as plt
 from statsmodels.nonparametric.smoothers_lowess import lowess
+from ArrayUtils import equalize_array_masks
 
 def regressions(Z,X):
     """
@@ -45,10 +46,7 @@ def regressions(Z,X):
     Parameters
     ----------
     Z : np.ma.MaskedArray
-        Array of depth values repeated for each band so that Z.shape==X.shape.
-        The mask needs to be the same too so that Z.mask==X.mask for all the
-        bands. If `Z` is only a single band, an attempt will be made to repeat
-        it the correct number of times.
+        Array of depth values.
     X : np.ma.MaskedArray
         The array of log transformed radiance values from equation B1 of
         Lyzenga 1978.
@@ -67,8 +65,13 @@ def regressions(Z,X):
     intercepts = []
     rvals = []
     for band in range(nbands):
-        slope,intercept,r_value,p_value,std_err = linregress(Z[...,band].compressed(),\
-                                                                 X[...,band].compressed())
+        z, x = equalize_array_masks(Z[...,band], X[...,band])
+        # print z.count(), x.count()
+        try:
+            slope,intercept,r_value,p_value,std_err = linregress(z.compressed(),\
+                                                                 x.compressed())
+        except IndexError:
+            slope,intercept,r_value,p_value,std_err = np.repeat(np.nan, 5, 0)
         # eq B1 is X=a-bz
         slopes.append( slope )
         intercepts.append( intercept )
@@ -277,7 +280,7 @@ def regression_plot(Z,X,band_names=None,figsize=(14,7)):
         A matplotlib figure.
     """
     if band_names is None:
-        band_names = ['band'+str(i+1) for i in range(X.shape[-1])]
+        band_names = ['Band'+str(i+1) for i in range(X.shape[-1])]
     nbands = X.shape[-1]
     if np.atleast_3d(Z).shape[-1] == 1:
         Z = np.repeat(np.atleast_3d(Z), nbands, 2)
@@ -287,12 +290,15 @@ def regression_plot(Z,X,band_names=None,figsize=(14,7)):
         if i > nbands-1:
             continue
         slp, incpt, rval = regs[:,i]
-        x = Z[...,i].compressed()
-        y = X[...,i].compressed()
+        # print X.shape, Z.shape
+        x, y = equalize_array_masks(Z[...,i], X[...,i])
+        if x.count() < 2:
+            continue
+        x, y = x.compressed(), y.compressed()
         # print "i = {}, x.shape = {}, y.shape = {}".format(i, x.shape, y.shape)
-        ax.scatter( x, y, alpha=0.05, edgecolor='none' )
+        ax.scatter( x, y, alpha=0.1, edgecolor='none' )
         smth = lowess(y,x,frac=0.2)
-        ax.plot(smth.T[0],smth.T[1],c='white',alpha=0.9)
+        ax.plot(smth.T[0],smth.T[1],c='yellow',alpha=0.9)
         ax.plot(smth.T[0],smth.T[1],c='black',alpha=0.75,linestyle='--')
         reglabel = "b=%.2f, r=%.2f" % (slp,rval)
         f = lambda x: incpt + slp * x

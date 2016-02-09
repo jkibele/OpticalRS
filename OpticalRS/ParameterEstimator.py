@@ -66,6 +66,7 @@ class ParameterEstimator(RasterShape):
         The image array masked outside of the geometry. The mask on this array
         may not match the mask on the depth array.
         """
+        # print "Image Shape: {}".format(self.img_rds.geometry_subset(self.geometry).shape)
         return self.img_rds.geometry_subset(self.geometry)
 
     @property
@@ -77,6 +78,7 @@ class ParameterEstimator(RasterShape):
         darr = self.depth_rds.geometry_subset(self.geometry).squeeze()
         if type(self.depth_range).__name__ != 'NoneType':
             darr = np.ma.masked_outside(darr, *self.depth_range)
+        # print "Depth Shape: {}".format(darr.shape)
         return darr
 
     def set_depth_range(self, depth_range):
@@ -158,13 +160,16 @@ class ParameterEstimator(RasterShape):
         else:
             dwm = deep_water_means
         X = np.ma.log(self.image_subset_array - dwm)
-        X, Xdepth = equalize_array_masks(X, self.depth_subset_array)
+        # X, Xdepth = equalize_array_masks(X, self.depth_subset_array)
+        Xdepth = self.depth_subset_array
         params = regressions(Xdepth, X)
         Kg_arr = -1 * params[0]
+        n_pix = X.reshape(-1,X.shape[-1]).count(0)
         nbands = np.atleast_3d(X).shape[-1]
         pardf = pd.DataFrame(Kg_arr, columns=["Kg"],
                              index=wv2_center_wavelength[:nbands])
         pardf['K'] = pardf.Kg / geometric_factor
+        pardf['nPix'] = n_pix
         return pardf
 
     def linear_fit_plot(self, deep_water_means=None):
@@ -173,9 +178,10 @@ class ParameterEstimator(RasterShape):
         else:
             dwm = deep_water_means
         X = np.ma.log(self.image_subset_array - dwm)
-        X, Xdepth = equalize_array_masks(X, self.depth_subset_array)
+        Xdepth = self.depth_subset_array
         fig = regression_plot(Xdepth, X)
         return fig
+        # return X, Xdepth
 
     def curve_fit_parameters(self, geometric_factor=2.0):
         paramdf = param_df(self.depth_subset_array, self.image_subset_array,
