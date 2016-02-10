@@ -265,12 +265,18 @@ def surface_refraction_correction(imarr):
 
 ## Visualization #############################################################
 
-def albedo_parameter_plots(imarr, darr, params=None, plot_params=True, figsize=(14,8)):
+def albedo_parameter_plots(imarr, darr, params=None, plot_params=True,
+                           ylabel='Reflectance', visible_only=True,
+                           figsize=(12,7)):
     from matplotlib import style
     style.use('ggplot')
     if params is None:
         params = est_curve_params(darr, imarr)
-    fig, axs = subplots(2, 4, figsize=figsize, sharey=False, sharex=True)
+    if visible_only:
+        fig, axs = subplots(2, 3, figsize=figsize, sharey=False, sharex=True)
+    else:
+        fig, axs = subplots(2, 4, figsize=figsize, sharey=False, sharex=True)
+
     for i, ax in enumerate(axs.ravel()):
         if i >= imarr.shape[-1]:
             # This means I've got more axes than image bands so I'll skip plotting
@@ -281,8 +287,9 @@ def albedo_parameter_plots(imarr, darr, params=None, plot_params=True, figsize=(
         if plot_params:
             ax.plot(plotz, myR0(plotz, *cp), c='brown')
         ax.set_xlabel('Depth')
-        ax.set_ylabel('Radiance')
-        btxt = "Band{} $R_\infty = {:.2f}$\n$A_d = {:.2f}$, $Kg = {:.2f}$ ".format(i+1, *cp)
+        ax.set_ylabel(ylabel)
+        btxt = "Band{b} $R_\infty = {R:.2f}$\n$A^{{toa}} = {A:.2f}$, $K_g = {Kg:.2f}$ "\
+                .format(b=i+1, R=cp[0], A=cp[1], Kg=cp[2])
         ax.set_title(btxt)
     tight_layout()
     return fig

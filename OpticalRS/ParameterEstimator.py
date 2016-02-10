@@ -172,14 +172,14 @@ class ParameterEstimator(RasterShape):
         pardf['nPix'] = n_pix
         return pardf
 
-    def linear_fit_plot(self, deep_water_means=None):
+    def linear_fit_plot(self, deep_water_means=None, visible_only=True):
         if type(deep_water_means).__name__ == 'NoneType':
             dwm = self.deep_water_means()
         else:
             dwm = deep_water_means
         X = np.ma.log(self.image_subset_array - dwm)
         Xdepth = self.depth_subset_array
-        fig = regression_plot(Xdepth, X)
+        fig = regression_plot(Xdepth, X, visible_only=visible_only)
         return fig
         # return X, Xdepth
 
@@ -188,12 +188,15 @@ class ParameterEstimator(RasterShape):
                             geometric_factor=geometric_factor)
         return paramdf
 
-    def curve_fit_plots(self, params=None, plot_params=True):
+    def curve_fit_plots(self, params=None, plot_params=True,
+                        ylabel='Reflectance', visible_only=True):
         return albedo_parameter_plots(self.image_subset_array,
                                         self.depth_subset_array, params=params,
-                                        plot_params=plot_params)
+                                        plot_params=plot_params, ylabel=ylabel,
+                                        visible_only=visible_only)
 
-    def K_comparison_plot(self, paramdf, columns='K', figure_title="$K$ Estimates vs. $K$ Values from Jerlov"):
+    def K_comparison_plot(self, paramdf, columns='K',
+                       figure_title="$K$ Estimates vs. $K$ Values from Jerlov"):
         return jerlov_Kd_plot(paramdf, columns, figure_title)
 
 ## Geometric Factor #######################################################

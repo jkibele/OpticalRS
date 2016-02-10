@@ -253,7 +253,7 @@ def depth_invariant(A,X):
     return np.ma.dstack( Yi )
 
 
-def regression_plot(Z,X,band_names=None,figsize=(14,7)):
+def regression_plot(Z,X,band_names=None,visible_only=True,figsize=(12,7)):
     """
     Produce a figure with a plot for each image band that displays the
     relationship between depth and radiance and gives a visual representation
@@ -284,7 +284,10 @@ def regression_plot(Z,X,band_names=None,figsize=(14,7)):
     nbands = X.shape[-1]
     if np.atleast_3d(Z).shape[-1] == 1:
         Z = np.repeat(np.atleast_3d(Z), nbands, 2)
-    fig, axs = plt.subplots( 2, 4, figsize=figsize )
+    if visible_only:
+        fig, axs = plt.subplots( 2, 3, figsize=figsize)
+    else:
+        fig, axs = plt.subplots( 2, 4, figsize=figsize )
     regs = regressions(Z,X)
     for i, ax in enumerate(axs.flatten()):
         if i > nbands-1:
@@ -300,11 +303,11 @@ def regression_plot(Z,X,band_names=None,figsize=(14,7)):
         smth = lowess(y,x,frac=0.2)
         ax.plot(smth.T[0],smth.T[1],c='yellow',alpha=0.9)
         ax.plot(smth.T[0],smth.T[1],c='black',alpha=0.75,linestyle='--')
-        reglabel = "b=%.2f, r=%.2f" % (slp,rval)
+        reglabel = "m=%.2f, r=%.2f" % (slp,rval)
         f = lambda x: incpt + slp * x
         ax.plot( x, f(x), c='r', label=reglabel )
         ax.set_title( band_names[i] )
-        ax.set_xlabel( r'Depth $z$' )
+        ax.set_xlabel( r'Depth' )
         ax.set_ylabel( r'$X_i$' )
         ax.legend(fancybox=True, framealpha=0.5)
     plt.tight_layout()
