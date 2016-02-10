@@ -3,22 +3,20 @@
 Multispectral Exposure
 ======================
 
-This module contains methods for adjusting the exposure of multispectral images.
-Unless otherwise stated methods will expect image arrays in the shape of 
-(Rows,Columns,Bands).
+This module contains **POORLY TESTED** methods for adjusting the exposure of
+multispectral images. Unless otherwise stated methods will expect image arrays
+in the shape of (Rows,Columns,Bands). These methods should be considered
+expirimental at this point.
 
 Most (if not all) of these methods will be based on scikit-image exposure
-methods. These methods can't be used directly (for my purposes) because they
-do not allow (in most cases) for use with masked arrays. My applications often
+methods. These methods can't be used directly (for my purposes) because they do
+not allow (in most cases) for use with masked arrays. My applications often
 involve images in which land and deep water have been masked so I need exposure
 methods that base calculations only on unmasked pixels.
 
-I often need to apply exposure methods to many individual bands. Most of the 
+I often need to apply exposure methods to many individual bands. Most of the
 scikit-image methods expect single band or RGB array. The methods in this
 module will apply to an arbitrary number of bands.
-
-Created on Tue Jan 27 15:16:10 2015
-@author: jkibele
 """
 
 import numpy as np
@@ -28,8 +26,21 @@ from skimage.morphology import disk
 
 def apply_with_mask_as_mean( func, img, **func_kwargs ):
     """
-    Convert masked values to mean of unmasked values and apply func. Return a 
+    Convert masked values to mean of unmasked values and apply func. Return a
     masked array with the same mask as the input.
+
+    Parameters
+    ----------
+    func :
+
+    img :
+
+    **func_kwargs :
+
+
+    Returns
+    -------
+
     """
     if type( img )==np.ma.MaskedArray:
         myimg = img.copy()
@@ -41,11 +52,24 @@ def apply_with_mask_as_mean( func, img, **func_kwargs ):
     else:
         out_img = func( img, **func_kwargs )
     return out_img
-    
+
 def multi_apply_with_mask_as_mean( img, func, **func_kwargs ):
     """
     Apply a function to each band of a multi-band image array. Masked elements
     will be replaced with the mean of unmasked values for the calculation.
+
+    Parameters
+    ----------
+    img :
+
+    func :
+
+    **func_kwargs :
+
+
+    Returns
+    -------
+
     """
     imshp = img.shape
     if img.ndim > 2:
@@ -59,11 +83,24 @@ def multi_apply_with_mask_as_mean( img, func, **func_kwargs ):
     outarr.fill_value = img.fill_value
     outarr.mask = img.mask
     return outarr
-    
+
 def multi_apply_rank_filter( img, func, **kwargs ):
     """
     The fliter.rank methods take a mask. This will just apply them to a masked
     array.
+
+    Parameters
+    ----------
+    img :
+
+    func :
+
+    **kwargs :
+
+
+    Returns
+    -------
+
     """
     selem = kwargs.pop('selem',disk(5) )
     imshp = img.shape
@@ -80,11 +117,26 @@ def multi_apply_rank_filter( img, func, **kwargs ):
     outarr.fill_value = img.fill_value
     outarr.mask = img.mask
     return outarr
-    
+
 def multi_rescale_intensity( img, p0=0, p1=99, out_range='dtype' ):
     """
-    Apply skimage.exposure.rescale_intensity to each band. Use percentiles p0 
+    Apply skimage.exposure.rescale_intensity to each band. Use percentiles p0
     and p1 to determine the in_range.
+
+    Parameters
+    ----------
+    img :
+
+    p0 :
+         (Default value = 0)
+    p1 :
+         (Default value = 99)
+    out_range :
+         (Default value = 'dtype')
+
+    Returns
+    -------
+
     """
     imshp = img.shape
     if img.ndim > 2:
@@ -100,14 +152,37 @@ def multi_rescale_intensity( img, p0=0, p1=99, out_range='dtype' ):
         outlist.append( outband )
     outarr = np.ma.MaskedArray( np.dstack(outlist), mask=img.mask, fill_value=img.fill_value )
     return outarr
-    
+
 def equalize_adapthist( img, **kwargs ):
+    """
+
+
+    Parameters
+    ----------
+    img :
+
+    **kwargs :
+
+
+    Returns
+    -------
+
+    """
     return multi_apply_with_mask_as_mean( img, exposure.equalize_adapthist, **kwargs )
-    
+
 def equalize_hist( img ):
     """
     Given an image of shape RxCxBands, histogram equalize each band
     and reassemble into same shape and return.
+
+    Parameters
+    ----------
+    img :
+
+
+    Returns
+    -------
+
     """
     nbins = 256
     imshp = img.shape

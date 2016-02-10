@@ -15,6 +15,17 @@
 
 import sys
 import os
+# The following is added from https://read-the-docs.readthedocs.org/en/latest/faq.html
+# to deal with modules that depend on C extensions
+#from mock import Mock as MagicMock
+#
+#class Mock(MagicMock):
+#    @classmethod
+#    def __getattr__(cls, name):
+#            return Mock()
+#
+#MOCK_MODULES = ['matplotlib','geopandas','rasterstats','scipy','osgeo','gdalconst','gdal_array']
+#sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory is
@@ -32,6 +43,7 @@ project_root = os.path.dirname(cwd)
 sys.path.insert(0, project_root)
 
 import OpticalRS
+from OpticalRS import *
 
 # -- General configuration ---------------------------------------------
 
@@ -40,7 +52,20 @@ import OpticalRS
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon',
+                'sphinx.ext.mathjax', 'sphinx.ext.viewcode']
+
+# Napoleon settings http://sphinx-doc.org/latest/ext/napoleon.html
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = True
+napoleon_use_admonition_for_examples = False
+napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_references = False
+napoleon_use_ivar = False
+napoleon_use_param = True
+napoleon_use_rtype = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
