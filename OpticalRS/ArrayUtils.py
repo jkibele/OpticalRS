@@ -155,9 +155,10 @@ def mask3D_with_2D( imarr, mask, keep_old_mask=True ):
         `imarr` with `mask` applied to every band.
     """
     nbands = imarr.shape[-1]
-    rmask = np.repeat( np.expand_dims( mask, 2 ), nbands, axis=2 )
+    rmask = np.repeat( np.atleast_3d(mask), nbands, axis=2 )
     try:
-        out = np.ma.MaskedArray( imarr, mask=rmask, fill_value=imarr.fill_value, keep_mask=keep_old_mask )
+        out = np.ma.MaskedArray( imarr, mask=rmask, fill_value=imarr.fill_value,
+                                 keep_mask=keep_old_mask )
     except AttributeError:
         # if `imarr` is not a masked array, it won't have `.fill_value`.
         out = np.ma.MaskedArray( imarr, mask=rmask, )

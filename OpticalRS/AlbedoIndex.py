@@ -23,6 +23,10 @@ Lyzenga, D.R., 1981. Remote sensing of bottom reflectance and water attenuation
 parameters in shallow water using aircraft and Landsat data. International
 Journal of Remote Sensing 2, 71–82. doi:10.1080/01431168108948342
 
+Maritorena, S., Morel, A., Gentili, B., 1994. Diffuse Reflectance of Oceanic
+Shallow Waters: Influence of Water Depth and Bottom Albedo. Limnology and
+Oceanography 39, 1689–1703.
+
 Philpot, W.D., 1987. Radiative transfer in stratified waters: a single-
 scattering approximation for irradiance. Applied Optics 26, 4123.
 doi:10.1364/AO.26.004123
@@ -53,7 +57,8 @@ def myR0(z,Rinf,Ad,Kg):
     irradiance reflectance immediately below the water surface for optically
     shallow, homogeneous water (eq. 2 from Philpot 1989). This model is
     essentially the same as the one discussed in appendix A of Lyzenga 1978.
-    I've rearranged it a bit (from eq.2, Philpot 1989) but it's equivalent.
+    I've rearranged it a bit (from eq.2, Philpot 1989) but it's equivalent. This
+    model is probably best described in Maritorena et al. 1994.
 
     Parameters
     ----------

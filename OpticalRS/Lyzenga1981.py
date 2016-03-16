@@ -40,6 +40,10 @@ def attenuation_coef_ratio(band_i,band_j,apply_log=True):
     band_j : numpy.array
         Array of reflectance values over the same area as `band_i` but from a
         different band, j.
+    apply_log : boolean
+        If you've already applied Lyzenga's tranformation (Xi = ln(Li - Lsi)),
+        then you'll want this set to `False`. Otherwise the log will be applied
+        to the `band_i` and `band_j`.
 
     Returns
     -------
