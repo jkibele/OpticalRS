@@ -22,7 +22,7 @@ class DepthEstimator(object):
     - size of known_depths array = size of a single band of img
     - unmasked known_depths pixels are a subset of unmasked img pixels
     """
-    def __init__(self,img,known_depths,k=5,weights='uniform'):
+    def __init__(self,img,known_depths):
         self.img_original = img
         self.imrds = None
         try:
@@ -43,8 +43,6 @@ class DepthEstimator(object):
         else:
             self.kdrds = RasterDS(self.known_original)
         self.known_depth_arr = self.__known_depth_arr()
-        self.k = k
-        self.weights = weights
         self.imarr = self.__imarr()
         self.__mask_depths_with_no_image()
         self.nbands = self.imarr_flat.shape[-1]

@@ -287,11 +287,11 @@ def geometric_factor_from_imd(imd_path):
 ## Visualization ###########################################################
 
 def jerlov_Kd_plot(paramdf, columns='K', jerlov_legend=True,
-                    figure_title="$K$ Estimates and $K$ Values from Jerlov",
+                    figure_title="$K$ Estimates and $K_d$ Values from Jerlov",
                     legend_loc='best'):
     from matplotlib.cm import summer_r
-    from matplotlib import style
-    style.use('ggplot')
+    # from matplotlib import style
+    # style.use('ggplot')
     jerlov_df = jerlov_Kd()
     fig, ax = subplots(1,1, figsize=(8,6))
 

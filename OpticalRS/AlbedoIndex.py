@@ -273,8 +273,8 @@ def surface_refraction_correction(imarr):
 def albedo_parameter_plots(imarr, darr, params=None, plot_params=True,
                            ylabel='Reflectance', visible_only=True,
                            figsize=(12,7)):
-    from matplotlib import style
-    style.use('ggplot')
+    # from matplotlib import style
+    # style.use('ggplot')
     if params is None:
         params = est_curve_params(darr, imarr)
     if visible_only:
@@ -291,7 +291,7 @@ def albedo_parameter_plots(imarr, darr, params=None, plot_params=True,
         plotz = np.arange(darr.min(), darr.max(), 0.2)
         if plot_params:
             ax.plot(plotz, myR0(plotz, *cp), c='brown')
-        ax.set_xlabel('Depth')
+        ax.set_xlabel('Depth (m)')
         ax.set_ylabel(ylabel)
         btxt = "Band{b} $R_\infty = {R:.2f}$\n$A^{{toa}} = {A:.2f}$, $K_g = {Kg:.2f}$ "\
                 .format(b=i+1, R=cp[0], A=cp[1], Kg=cp[2])

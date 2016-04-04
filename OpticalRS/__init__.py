@@ -15,6 +15,7 @@ import AlbedoIndex
 import KNNDepth
 import GeoDFUtils
 import ParameterEstimator
+import GroundTruthShp
 from DepthEstimator import DepthEstimator
 
 __author__ = 'Jared Kibele'
