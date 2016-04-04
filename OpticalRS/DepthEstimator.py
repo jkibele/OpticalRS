@@ -8,8 +8,9 @@ satellite imagery.
 """
 
 from RasterDS import RasterDS
-from ArrayUtils import mask3D_with_2D
+from ArrayUtils import mask3D_with_2D, equalize_array_masks, equalize_band_masks
 import KNNDepth
+from Lyzenga2006 import dark_pixel_array, fit_and_predict
 import numpy as np
 from sklearn.cross_validation import train_test_split
 
@@ -201,3 +202,15 @@ class DepthEstimator(object):
         ests = knnmodel.predict(self.imarr_compressed)
         out[~out.mask] = ests
         return out
+
+    def lyzenga_depth_estimation(self, Rinf=None, bands=None):
+        if bands is None:
+            bands = self.nbands
+        if Rinf is None:
+            dpa = dark_pixel_array(self.imarr[...,:bands])
+            Rinf = dpa.reshape(-1, bands).mean(0).data
+        X = np.ma.log(self.imarr[...,:bands] - Rinf)
+        X = equalize_band_masks(X)
+        # need to re-equalize, might have lost pixels in log transform
+        Xtrain, deparr = equalize_array_masks(X, self.known_depth_arr)
+        return fit_and_predict(Xtrain, deparr, X)
