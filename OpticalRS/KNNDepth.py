@@ -9,8 +9,9 @@ k nearest neighbors technique.
 
 from sklearn.neighbors import KNeighborsRegressor
 from ArrayUtils import mask3D_with_2D
+from scipy.spatial.distance import cosine
 
-def train_model(pixels,depths,k=5,weights='uniform'):
+def train_model(pixels,depths,k=5,weights='uniform',n_jobs=3):
     """
     Return a KNN Regression model trained on the given pixels for the given
     depths.
@@ -47,7 +48,9 @@ def train_model(pixels,depths,k=5,weights='uniform'):
         A trained KNNRegression model. See the link in the Notes section for
         more information.
     """
-    knn = KNeighborsRegressor(n_neighbors=k,weights=weights)
+    # knn = KNeighborsRegressor(n_neighbors=k,weights=weights, metric='pyfunc',
+    #                             metric_params={'func': cosine}, n_jobs=n_jobs)
+    knn = KNeighborsRegressor(n_neighbors=k, weights=weights, n_jobs=n_jobs)
     return knn.fit(pixels,depths)
 
 def model_from_imarr(imarr,depths,k=5,weights='uniform'):

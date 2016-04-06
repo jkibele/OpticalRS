@@ -2,6 +2,9 @@
 I'm copying this from some of my much older work. It's probably going to be
 buggy. Yep, it is. This needs to be refactored but there's some useful stuff.
 Maybe combine with `GeoDFUtils`?
+
+`buffer` and `rasterize` are working pretty well. Still need tests and whatnot
+but those methods are the main use for this module at the moment.
 """
 
 #from error_matrix import *

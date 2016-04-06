@@ -181,7 +181,7 @@ class DepthEstimator(object):
                         train_size=train_size,random_state=random_state)
         return DepthEstimator(im_train,dep_train),DepthEstimator(im_test,dep_test)
 
-    def knn_depth_model(self,k=5,weights='uniform'):
+    def knn_depth_model(self,k=5,weights='uniform',n_jobs=4):
         """
         Return a trained KNN depth model. See `OpticalRS.KNNDepth.train_model`
         for more information. This is really just a wrapper over the
@@ -189,21 +189,21 @@ class DepthEstimator(object):
         """
         return KNNDepth.train_model(self.known_imarr_flat.compressed().reshape(-1,self.nbands),
                                     self.known_depth_arr_flat.compressed(),
-                                    k=k,weights=weights)
+                                    k=k,weights=weights,n_jobs=n_jobs)
 
-    def knn_depth_estimation(self,k=5,weights='uniform'):
+    def knn_depth_estimation(self,k=5,weights='uniform',n_jobs=4):
         """
         Train a KNN regression model with `known_depths` and corresponding
         pixels from `img`. Then use that model to predict depths for all pixels
         in `img`. Return a single band array of estimated depths.
         """
         out = self.imarr[...,0].copy()
-        knnmodel = self.knn_depth_model(k=k, weights=weights)
+        knnmodel = self.knn_depth_model(k=k, weights=weights, n_jobs=n_jobs)
         ests = knnmodel.predict(self.imarr_compressed)
         out[~out.mask] = ests
         return out
 
-    def lyzenga_depth_estimation(self, Rinf=None, bands=None):
+    def lyzenga_depth_estimation(self, Rinf=None, bands=None, n_jobs=4):
         if bands is None:
             bands = self.nbands
         if Rinf is None:
@@ -213,4 +213,4 @@ class DepthEstimator(object):
         X = equalize_band_masks(X)
         # need to re-equalize, might have lost pixels in log transform
         Xtrain, deparr = equalize_array_masks(X, self.known_depth_arr)
-        return fit_and_predict(Xtrain, deparr, X)
+        return fit_and_predict(Xtrain, deparr, X, n_jobs=n_jobs)

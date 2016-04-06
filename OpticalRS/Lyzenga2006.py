@@ -30,7 +30,7 @@ from sklearn.linear_model import LinearRegression
 import itertools
 from collections import OrderedDict
 
-def get_fit( ind, x_train, y_train ):
+def get_fit( ind, x_train, y_train, n_jobs=4 ):
     """
     Get a linear regression fit object from Scikit-learn for eq. 9 from Lyzenga
     et al. 2006.
@@ -55,11 +55,11 @@ def get_fit( ind, x_train, y_train ):
     if x_train.ndim > 2:
         nbands = x_train.shape[-1]
         x_train = x_train.compressed().reshape(-1,nbands)
-    skols = LinearRegression()
+    skols = LinearRegression(n_jobs=n_jobs)
     skolsfit = skols.fit(x_train[...,ind],y_train.compressed())
     return skolsfit
 
-def get_selfscore( ind, x_train, y_train ):
+def get_selfscore( ind, x_train, y_train, n_jobs=4 ):
     """
     Get the r^2 value from linear regression fit object from Scikit-learn for
     eq. 9 from Lyzenga et al. 2006.
@@ -84,7 +84,7 @@ def get_selfscore( ind, x_train, y_train ):
     if x_train.ndim > 2:
         nbands = x_train.shape[-1]
         x_train = x_train.compressed().reshape(-1,nbands)
-    fit = get_fit( ind, x_train, y_train )
+    fit = get_fit( ind, x_train, y_train, n_jobs=n_jobs )
     return fit.score( x_train[...,ind], y_train.compressed() )
 
 def ranked_combos(x_img,y_depths,n=2):
@@ -147,7 +147,7 @@ def best_combo(x_img,y_depths,n=2):
     """
     return ranked_combos(x_img,y_depths,n).values()[0]
 
-def tuned_linear_model(x_img,y_depths,n=2):
+def tuned_linear_model(x_img,y_depths,n=2,n_jobs=4):
     """
     Find the best combo of `n` bands from `x_img` and return a model tuned to
     the training data (`x_img` and `y_depths`).
@@ -172,9 +172,9 @@ def tuned_linear_model(x_img,y_depths,n=2):
         http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html
     """
     ind = best_combo(x_img,y_depths,n)
-    return get_fit(ind,x_img,y_depths)
+    return get_fit(ind,x_img,y_depths,n_jobs=n_jobs)
 
-def fit_and_predict(x_train,y_train,x_img,n=2):
+def fit_and_predict(x_train,y_train,x_img,n=2,n_jobs=4):
     """
     Build Lyzenga depth estimation model trained on `x_train` (transformed
     imagery) and `y_train` (depths) and use it to estimate depths for `x_img`.
@@ -202,7 +202,7 @@ def fit_and_predict(x_train,y_train,x_img,n=2):
     """
     outarr = x_img[...,0].copy()
     ind = best_combo(x_train,y_train,n)
-    modl = get_fit(ind,x_train,y_train)
+    modl = get_fit(ind,x_train,y_train,n_jobs=n_jobs)
     pred = modl.predict(x_img[...,ind].compressed().reshape(-1,n))
     outarr[~outarr.mask] = pred
     return outarr
@@ -345,6 +345,15 @@ def dark_pixel_array( imarr, p=10, win_size=3, win_percentage=50 ):
     dparr = imarr.copy()
     dparr.mask = ~np.repeat( np.atleast_3d(dp), nbands, 2 )
     return dparr
+
+def deep_water_means(imarr, n_std=0, p=10, win_size=3, win_percentage=50):
+    nbands = imarr.shape[-1]
+    dpa = dark_pixel_array(imarr, p=p, win_size=win_size,
+                           win_percentage=win_percentage)
+    dpaavg = dpa.reshape(-1, nbands).mean(0).data
+    dpastd = dpa.reshape(-1, nbands).std(0).data
+    Rinf = dpaavg - (n_std * dpastd)
+    return Rinf
 
 def bg_thresholds( dark_arr, n_std=3 ):
     """
