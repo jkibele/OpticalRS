@@ -9,9 +9,8 @@ k nearest neighbors technique.
 
 from sklearn.neighbors import KNeighborsRegressor
 from ArrayUtils import mask3D_with_2D
-from scipy.spatial.distance import cosine
 
-def train_model(pixels,depths,k=5,weights='uniform',n_jobs=3):
+def train_model(pixels, depths, **kwargs):
     """
     Return a KNN Regression model trained on the given pixels for the given
     depths.
@@ -32,6 +31,9 @@ def train_model(pixels,depths,k=5,weights='uniform',n_jobs=3):
         The measured depths that correspond to each pixel in the `pixels` array.
         The units of measurement shouldn't make any difference. Predictions made
         will, of course, be in the same units as the training depths.
+
+    Keyword Arguments
+    -----------------
     k : int, optional
         The number of neighbors used by the KNN algorithm.
     weights : str or callable, optional
@@ -41,6 +43,8 @@ def train_model(pixels,depths,k=5,weights='uniform',n_jobs=3):
             more influence.
         * [callable]: A user-defined function wich accepts an array of distances
             and returns an array of the same shape containing the weights.
+    See http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor.html
+        for additional keyword arguments.
 
     Returns
     -------
@@ -48,9 +52,8 @@ def train_model(pixels,depths,k=5,weights='uniform',n_jobs=3):
         A trained KNNRegression model. See the link in the Notes section for
         more information.
     """
-    # knn = KNeighborsRegressor(n_neighbors=k,weights=weights, metric='pyfunc',
-    #                             metric_params={'func': cosine}, n_jobs=n_jobs)
-    knn = KNeighborsRegressor(n_neighbors=k, weights=weights, n_jobs=n_jobs)
+    k = kwargs.pop('k',5)
+    knn = KNeighborsRegressor(n_neighbors=k, **kwargs)
     return knn.fit(pixels,depths)
 
 def model_from_imarr(imarr,depths,k=5,weights='uniform'):

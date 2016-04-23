@@ -10,7 +10,7 @@ satellite imagery.
 from RasterDS import RasterDS
 from ArrayUtils import mask3D_with_2D, equalize_array_masks, equalize_band_masks
 import KNNDepth
-from Lyzenga2006 import dark_pixel_array, fit_and_predict
+from Lyzenga2006 import dark_pixel_array, fit_and_predict, deep_water_means
 import numpy as np
 from sklearn.cross_validation import train_test_split
 
@@ -181,7 +181,8 @@ class DepthEstimator(object):
                         train_size=train_size,random_state=random_state)
         return DepthEstimator(im_train,dep_train),DepthEstimator(im_test,dep_test)
 
-    def knn_depth_model(self,k=5,weights='uniform',n_jobs=4):
+    def knn_depth_model(self,k=5,weights='uniform',metric='minkowski',
+                        n_jobs=4, **kwargs):
         """
         Return a trained KNN depth model. See `OpticalRS.KNNDepth.train_model`
         for more information. This is really just a wrapper over the
@@ -189,26 +190,29 @@ class DepthEstimator(object):
         """
         return KNNDepth.train_model(self.known_imarr_flat.compressed().reshape(-1,self.nbands),
                                     self.known_depth_arr_flat.compressed(),
-                                    k=k,weights=weights,n_jobs=n_jobs)
+                                    k=k, weights=weights,
+                                    metric=metric, n_jobs=n_jobs, **kwargs)
 
-    def knn_depth_estimation(self,k=5,weights='uniform',n_jobs=4):
+    def knn_depth_estimation(self,k=5,weights='uniform',
+                             metric='minkowski',n_jobs=4, **kwargs):
         """
         Train a KNN regression model with `known_depths` and corresponding
         pixels from `img`. Then use that model to predict depths for all pixels
         in `img`. Return a single band array of estimated depths.
         """
         out = self.imarr[...,0].copy()
-        knnmodel = self.knn_depth_model(k=k, weights=weights, n_jobs=n_jobs)
+        knnmodel = self.knn_depth_model(k=k, weights=weights,
+                                        metric=metric, n_jobs=n_jobs, **kwargs)
         ests = knnmodel.predict(self.imarr_compressed)
         out[~out.mask] = ests
         return out
 
-    def lyzenga_depth_estimation(self, Rinf=None, bands=None, n_jobs=4):
+    def lyzenga_depth_estimation(self, Rinf=None, bands=None, n_std=0,
+                                    n_jobs=4):
         if bands is None:
             bands = self.nbands
         if Rinf is None:
-            dpa = dark_pixel_array(self.imarr[...,:bands])
-            Rinf = dpa.reshape(-1, bands).mean(0).data
+            Rinf = deep_water_means(self.imarr[...,:bands], n_std=n_std)
         X = np.ma.log(self.imarr[...,:bands] - Rinf)
         X = equalize_band_masks(X)
         # need to re-equalize, might have lost pixels in log transform

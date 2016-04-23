@@ -74,11 +74,12 @@ def point_sample_raster(gdf, rds, win_radius=0, stat_func=np.mean, col_names=Non
         This can be any function that takes an array and an axis and returns
         a numeric value. In practice, this will probably be numpy statistical
         functions like `np.mean`, `np.median`, `np.std`, `np.var`, etc.
-    col_names : list or array-like
+    col_names : list, array-like, or string
         Names for the columns to be created in the output GeoDataFrame. The
         length must be the same as the number of bands in `rds`. If `None`, then
         `rds.band_names` will be used. This will generally mean that the columns
-        will be called 'band1', 'band2', etc.
+        will be called 'band1', 'band2', etc. A string can be used with `rds`
+        is a single band raster.
 
     Returns
     -------
@@ -87,6 +88,8 @@ def point_sample_raster(gdf, rds, win_radius=0, stat_func=np.mean, col_names=Non
     """
     if col_names==None:
         col_names = rds.band_names
+    elif type(col_names) == str:
+        col_names = [col_names]
     nbands = rds.gdal_ds.RasterCount
     winsize = 1 + win_radius * 2
     rast_poly = rds.raster_extent
