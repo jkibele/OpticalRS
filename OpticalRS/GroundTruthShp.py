@@ -19,6 +19,8 @@ import os
 from osgeo import ogr, gdal, osr
 import shapely as shpl
 from scipy.stats import mode as scipymode
+from tempfile import mkdtemp
+import shutil
 
 class GroundTruthShapefile(object):
     """
@@ -84,6 +86,49 @@ class GroundTruthShapefile(object):
         Return a GeoPandas GeoDataFrame object.
         """
         return gpd.GeoDataFrame.from_file(self.file_path)
+
+    def geopandas_subset(self, query, file_name=None):
+        """
+        Create a `GroundTruthShapefile` based on a geopandas subset of
+        `self.geo_data_frame`. If `file_name` is `None` (default), then the file
+        will only be temporarily saved. It will be deleted before this function
+        returns. This seems to work fine for generating error matrices from
+        subsets but it could have unintended consequences elsewhere. If you
+        provide a `file_name`, a shapefile will be saved from the output.
+
+        Parameters
+        ----------
+        query : string or pandas Series
+            If `query` is a string, `pandas.DataFrame.query` will be used to
+            generate the subset. Otherwise, query is assumed to be a series that
+            can be used to index `self.geo_data_frame`.
+        file_name : string file path or None
+            If `None`, a temporary shapefile will be created and immediately
+            deleted. Otherwise, the subset will be saved as a shapefile.
+
+        Returns
+        -------
+        GroundTruthShapefile
+            A `GroundTruthShapefile` object containing only the selected subset
+            of features.
+        """
+        if file_name is None:
+            tdir = mkdtemp()
+            tfn = os.path.join(tdir, 'temp.shp')
+        else:
+            tfn = file_name
+        if type(query) is str:
+            gdf = self.geo_data_frame.query(query)
+        else:
+            gdf = self.geo_data_frame[query]
+        # save the subset to a file
+        gdf.to_file(tfn)
+        # make a new GroundTruthShapefile
+        gts = GroundTruthShapefile(tfn, self.habfield, self.habcodefld)
+        if file_name is None:
+            shutil.rmtree(tdir)
+        return gts
+
 
     @property
     def spatial_reference(self):
