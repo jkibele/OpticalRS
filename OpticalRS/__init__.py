@@ -17,6 +17,7 @@ import GeoDFUtils
 import ParameterEstimator
 import GroundTruthShp
 from DepthEstimator import DepthEstimator
+from ErrorMatrix import ErrorMatrix
 
 __author__ = 'Jared Kibele'
 __email__ = 'jkibele@gmail.com'

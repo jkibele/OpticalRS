@@ -9,7 +9,7 @@ reading and writing to GeoTiffs from `numpy.array` format.
 """
 
 import os,sys
-from osgeo import gdal, osr
+from osgeo import gdal, osr, ogr
 from osgeo.gdalconst import *
 from osgeo.gdal_array import NumericTypeCodeToGDALTypeCode
 import numpy as np
@@ -210,6 +210,77 @@ class RasterDS(object):
         """
         return masked_subset(self, geom, all_touched=all_touched)
 
+    def index_at_point(self,point):
+        """
+        Return the matrix index for a point.
+
+        Parameters
+        ----------
+        point : ogr.Geometry or shapely.geometry.point.Point
+            Specifically, this is expected to be a point geometry.
+
+        Returns
+        -------
+        tuple
+            yOffset and xOffset of the point on the gdal image array.
+        """
+        if type(point)==ogr.Geometry:
+            x = point.GetX()
+            y = point.GetY()
+        else: # We'll assume the point is a shapely.geometry.point.Point via geopandas
+            x = point.x
+            y = point.y
+
+        trans = transform_dict(self.gdal_ds)
+
+        xOffset = int( (x - trans['originX']) / trans['pixWidth'] )
+        yOffset = int( (y - trans['originY']) / trans['pixHeight'] )
+
+        return yOffset, xOffset
+
+    def spectrum_at_point(self, point):
+        """
+        Return the spectra at a given point. The spectra will be returned as a
+        numpy array, 1 row x N columns where N is the number of bands in the
+        image.
+
+        Parameters
+        ----------
+        point : ogr.Geometry or shapely.geometry.point.Point
+            Specifically, this is expected to be a point geometry.
+
+        Returns
+        -------
+        numpy array
+            The shape depends on the number of bands in the raster.
+        """
+        yOffset, xOffset = self.index_at_point( point )
+
+        band_values = []
+        for bnum in range( 1, self.gdal_ds.RasterCount + 1 ):
+            band = self.gdal_ds.GetRasterBand( bnum )
+            data = band.ReadAsArray(xOffset, yOffset, 1, 1)[0,0]
+            band_values.append( data )
+        return np.array( band_values )
+
+    def value_at_point(self, point, band_index=0):
+        """
+        Return the value at a point for a given band. The default is the first
+        image band.
+
+        Parameters
+        ----------
+        point : ogr.Geometry or shapely.geometry.point.Point
+            Specifically, this is expected to be a point geometry.
+
+        Returns
+        -------
+        scalar value
+            The data type of the return depends on the data type of the raster
+            band being sampled.
+        """
+        return self.spectrum_at_point(point)[band_index]
+
     def new_image_from_array(self,bandarr,outfilename=None,dtype=None,no_data_value=None):
         """
         Save an GeoTiff like `self` with data from  `bandarray`.
@@ -274,11 +345,38 @@ class RasterDS(object):
                 # set the array's fill value to no_data_value
                 bandarr.fill_value = no_data_value
                 bandarr = bandarr.filled()
+        bandarr = np.ma.atleast_3d(bandarr)
         bandarr = np.rollaxis(bandarr,2,0)
         if not outfilename:
             outfilename = self.output_file_path()
         output_gtif_like_img(self.gdal_ds, bandarr, outfilename, no_data_value=no_data_value, dtype=dtype)
         return RasterDS(outfilename)
+
+def transform_dict(img):
+    """
+    Take a raster data source and return a dictionary with geotranform values
+    and keys that make sense.
+
+    Parameters
+    ----------
+    img : gdal.datasource
+        The image datasource from which the GeoTransform will be retrieved.
+
+    Returns
+    -------
+    dict
+        A dict with the geotransform values labeled.
+    """
+    geotrans = img.GetGeoTransform()
+    ret_dict = {
+            'originX':   geotrans[0],
+            'pixWidth':  geotrans[1],
+            'rotation1': geotrans[2],
+            'originY':   geotrans[3],
+            'rotation2': geotrans[4],
+            'pixHeight': geotrans[5],
+        }
+    return ret_dict
 
 def get_extent(gt,cols,rows):
     """

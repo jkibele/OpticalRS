@@ -11,6 +11,9 @@ of images. Unless stated otherwise, image arrays are expected to be of shape
 import warnings
 import numpy as np
 import pandas as pd
+from tempfile import NamedTemporaryFile
+from scipy.misc import imsave
+from scipy import ndimage as nd
 
 def equalize_band_masks( marr ):
     """
@@ -307,3 +310,107 @@ def each_band( imarr, funct, *args, **kwargs ):
         return each_band_masked( imarr, funct, *args, **kwargs )
     else:
         return each_band_unmasked( imarr, funct, *args, **kwargs )
+
+def save_temp(imarr, rds=None):
+    """
+    Save the array to a temporary image file. Save to a geotiff if an `RasterDS`
+    template is provided, otherwise save to a png. Don't forget to delete the
+    tempfile!
+
+    Parameters
+    ----------
+    imarr : ndarray, MxN or MxNx3 or MxNx4
+        Array containing image values. If the shape is MxN, the  array
+        represents a grey-level image. Shape MxNx3 stores  the red, green and
+        blue bands along the last dimension.  An alpha layer may be included,
+        specified as the last  colour band of an MxNx4 array.
+
+    rds : OpticalRS.RasterDS instance
+        A RasterDS to use as a template to create a geotiff. The RDS needs to
+        have the same (R x C) dimensions as `imarr` but can have a different
+        number of bands.
+
+    Returns
+    -------
+    string
+        The file path to the saved image. Delete this when you are done with it!
+
+    Example
+    -------
+
+    In IPython on Unbuntu, you can put the following in a cell to  view a
+    temporary .png with the Eye of Gnome image viewer and delete the temp image
+    when you close the viewer:
+
+        > tmpfp = save_temp(imarr)
+        > !eog {tmpfp}
+        > !rm {tmpfp}
+
+    Similarly, this will save a temporary geotiff and open it in QGIS:
+
+        > tmpfp = save_temp(imarr, rds=imrds)
+        > !qgis {tmpfp}
+        > !rm {tmpfp}
+    """
+    NP2GDAL_CONVERSION = {
+        "bool": 1,
+        "uint8": 1,
+        "int8": 1,
+        "uint16": 2,
+        "int16": 3,
+        "uint32": 4,
+        "int32": 5,
+        "float32": 6,
+        "float64": 7,
+        "complex64": 10,
+        "complex128": 11,
+    }
+    if rds is None:
+        fileTemp = NamedTemporaryFile(delete=False, suffix='.png')
+        tfp = fileTemp.name
+        fileTemp.close()
+        imsave(tfp, imarr)
+    else:
+        fileTemp = NamedTemporaryFile(delete=False, suffix='.tif')
+        tfp = fileTemp.name
+        fileTemp.close()
+        rds.new_image_from_array(np.atleast_3d(imarr),
+                             tfp, dtype=NP2GDAL_CONVERSION[imarr.dtype.name])
+    print "Temp image created. Don't forget to delete the file: {}".format(tfp)
+    return tfp
+
+def invalid_fill_single(data, invalid=None):
+    """
+    Replace the value of invalid 'data' cells (indicated by 'invalid')
+    by the value of the nearest valid data cell. I got this off of stackexchange.
+
+    Input:
+        data:    numpy array of any dimension
+        invalid: a binary array of same shape as 'data'.
+                 data value are replaced where invalid is True
+                 If None (default), use: invalid  = np.isnan(data)
+
+    Output:
+        Return a filled array.
+    """
+    if invalid is None: invalid = np.isnan(data)
+
+    ind = nd.distance_transform_edt(invalid,
+                                    return_distances=False,
+                                    return_indices=True)
+    return np.ma.masked_where(data.mask, data[tuple(ind)])
+
+def invalid_fill(data, invalid):
+    """
+    Fill invalid data with values from nearest valid data. This function calls
+    `invalid_fill_single` on each image band seperately to avoid filling with
+    values from another band.
+    """
+    data = np.atleast_3d(data)
+    invalid = np.atleast_3d(invalid)
+    nbands = data.shape[-1]
+    outarr = data.copy()
+    for b in range(nbands):
+        outarr[...,b] = invalid_fill_single(outarr[...,b], invalid[...,b])
+    outarr = np.ma.masked_where(data.mask, outarr)
+    return outarr
