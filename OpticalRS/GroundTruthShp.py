@@ -14,6 +14,7 @@ from RasterDS import RasterDS
 from ErrorMatrix import ErrorMatrix
 from scipy.stats.stats import mode
 import numpy as np
+import pandas as pd
 import geopandas as gpd
 import os
 from osgeo import ogr, gdal, osr
@@ -21,6 +22,134 @@ import shapely as shpl
 from scipy.stats import mode as scipymode
 from tempfile import mkdtemp
 import shutil
+
+class GroundTruthGDF(gpd.GeoDataFrame):
+    def __init__(self, *args, **kwargs):
+        hf = kwargs.pop('habfield', 'habitat')
+        hc = kwargs.pop('habcodefield', 'hab_num')
+        super(GroundTruthGDF, self).__init__(*args, **kwargs)
+        self.habfield = hf
+        self.habcodefld = hc
+
+    @classmethod
+    def new(cls,*args,**kwargs):
+        return cls(*args,**kwargs)
+
+    @classmethod
+    def from_file(cls, filename, **kwargs):
+        hf = kwargs.pop('habfield', 'habitat')
+        hc = kwargs.pop('habcodefield', 'hab_num')
+        gdf = gpd.io.file.read_file(filename, **kwargs)
+        return cls(gdf, habfield=hf, habcodefield=hc)
+
+    @property
+    def codes_habitat(self):
+        """
+        Return a dictionary just like habitat_codes only backwards.
+        """
+        hf = self.habfield
+        hcf = self.habcodefld
+        hcd = dict()
+        for cl in self[hcf].unique():
+            if cl > 0:
+                hcd[cl] = self[self[hcf]==cl][hf].mode().item()
+        return hcd
+
+    def __getitem__(self, key):
+        result = super(GroundTruthGDF, self).__getitem__(key)
+        if isinstance(result, gpd.GeoDataFrame):
+            result.__class__ = GroundTruthGDF
+            result.habfield = self.habfield
+            result.habcodefld = self.habcodefld
+        return result
+
+    def query(self, expr, inplace=False, **kwargs):
+        result = super(GroundTruthGDF, self).query(expr, inplace=False, **kwargs)
+        if isinstance(result, gpd.GeoDataFrame):
+            result.__class__ = GroundTruthGDF
+            result.habfield = self.habfield
+            result.habcodefld = self.habcodefld
+        return result
+
+    def comparison_df(self, rds, radius=0, generous=False, band_index=0,
+                       out_of_bounds=np.nan, with_unclassed=False):
+        pred = self.compare_raster(rds, radius=radius, generous=generous,
+                                   band_index=band_index,
+                                   out_of_bounds=out_of_bounds)
+        truth = self.__getitem__(self.habcodefld)
+        truth.name = 'truth'
+        pred.name = 'pred'
+        preddf = pd.concat((truth, pred), axis=1)
+        if not with_unclassed:
+            # Get rid of any row that has a zero in it
+            preddf = preddf[(preddf!=0).all(1)]
+        return preddf
+
+    def error_matrix(self, rds, radius=0, generous=False, band_index=0,
+                       out_of_bounds=np.nan, with_unclassed=False):
+        from sklearn.metrics import confusion_matrix
+        compdf = self.comparison_df(rds, radius=radius, generous=generous,
+                                    band_index=band_index,
+                                    out_of_bounds=out_of_bounds,
+                                    with_unclassed=with_unclassed).dropna()
+        # scikit-learn returns pred on x and true on y. I want it the other
+        # way around so .T
+        em = confusion_matrix(compdf.truth, compdf.pred).T.view(ErrorMatrix)
+        codes = np.sort(np.unique(compdf.dropna()))
+        em.categories = map(lambda s: self.codes_habitat.get(s, "Unclassified"),
+                            codes)
+        return em
+
+    def compare_raster(self, rds, radius=0, generous=False, band_index=0,
+                       out_of_bounds=np.nan):
+        """
+        Compare habitat codes in `gdf` with codes in corresponding locations of
+        a raster habitat map (`rds`). This can be an exact point to point
+        comparison (when `radius`=0) or can be more forgiving. When `radius`>0
+        and `generous` is `False`, the mode (most common) value within `radius`
+        of each point will be returned. When `radius`>0 and `generous` is True,
+        ground truth habitat codes will be returned if found within `radius` of
+        each point, and the mode will be returned if not.
+
+        Parameters
+        ----------
+        rds : OpticalRS.RasterDS
+            The habitat map (or whatever raster) you want to compare to the
+            `GroundTruthShapefile` (self). The projection of this raster must
+            match the projection of the `GroundTruthShapefile`. If it doesn't
+            match, you might get results but they'll be wrong.
+        radius : float
+            The radius with which to buffer `point`. The units of this value
+            depend on the projection being used.
+        generous : boolean
+            If False (default), mode will be returned. If True, habitat code will be
+            returned if within `radius`. See function description for more info.
+        band_index : int
+            Index of the image band to sample. Zero indexed (band 1 = 0). For
+            single band rasters, this should be left at the default value (0).
+        out_of_bounds : float, int, or nan (default)
+            If `point` is not within `self.raster_extent`, `out_of_bounds` will
+            be returned.
+
+        Returns
+        -------
+        pandas Series
+            The values from `rds` that correspond to each point in `gdf`.
+        """
+        column = self.habcodefld
+        if generous:
+            rcheck = lambda row: rds.radiused_point_check(row.geometry,
+                                                          radius=radius,
+                                                          search_value=row[column],
+                                                          band_index=band_index,
+                                                          out_of_bounds=out_of_bounds)
+        else:
+            rcheck = lambda row: rds.radiused_point_check(row.geometry,
+                                                          radius=radius,
+                                                          search_value=None,
+                                                          band_index=band_index,
+                                                          out_of_bounds=out_of_bounds)
+        return self.apply(rcheck, axis=1)
 
 class GroundTruthShapefile(object):
     """
@@ -81,11 +210,21 @@ class GroundTruthShapefile(object):
         return habs
 
     @property
+    def legit_habs_code_sorted(self):
+        """
+        Return the legit habitats sorted by order of their numeric codes.
+        """
+        return [v for k,v in sorted(self.codes_habitat.items())]
+
+    @property
     def geo_data_frame(self):
         """
         Return a GeoPandas GeoDataFrame object.
         """
-        return gpd.GeoDataFrame.from_file(self.file_path)
+        gtgdf = GroundTruthGDF.from_file(self.file_path, habfield=self.habfield,
+                                         habcodefield=self.habcodefld)
+        # gtgdf = gpd.GeoDataFrame.from_file(self.file_path)
+        return gtgdf
 
     def geopandas_subset(self, query, file_name=None):
         """
@@ -249,9 +388,7 @@ class GroundTruthShapefile(object):
             feat.Destroy()
         # ensure the new features are written
         dst_lyr.SyncToDisk()
-
         return dst_ds
-
 
     def rasterize(self, buffer_radius=None, raster_template=None,
                   pixel_size=1.99976, value_field='hab_num', float_values=False,
@@ -408,6 +545,10 @@ class GroundTruthShapefile(object):
                     continue
                 if with_unclassed:
                     errmat[ cls_val ][ ref_val ] += 1
+                elif cls_val == 0:
+                    # If we're not including unclassified values
+                    # we don't want this showing up in the totals.
+                    continue
                 else:
                     errmat[ cls_val - 1 ][ ref_val - 1 ] += 1
         # Get rid of all zero rows and columns. This can happen if hab codes
@@ -484,6 +625,10 @@ class GroundTruthShapefile(object):
                         cls_val = scipymode(clsarr.compressed()).mode.item()
                 if with_unclassed:
                     errmat[ cls_val ][ ref_val ] += 1
+                elif cls_val == 0:
+                    # If we're not including unclassified values
+                    # we don't want this showing up in the totals.
+                    continue
                 else:
                     errmat[ cls_val - 1 ][ ref_val - 1 ] += 1
         # Get rid of all zero rows and columns. This can happen if hab codes

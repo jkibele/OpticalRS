@@ -268,7 +268,10 @@ def each_band_masked( imarr, funct, *args, **kwargs ):
         outlist.append( newband )
         ismalist.append( type(newband)==np.ma.MaskedArray )
     if False in ismalist:
-        warnings.warn( "A function returned an unmasked array when a masked array was expected. I'll try to copy the mask from the input array.")
+        # The mask copying seems to work well, so I'll comment out the warning.
+        # msg = """A function returned an unmasked array when a masked array was
+        #       expected. I'll try to copy the mask from the input array."""
+        # warnings.warn(msg)
         outarr = np.ma.dstack( outlist )
         outarr.mask = imarr.mask
         outarr.set_fill_value( imarr.fill_value )

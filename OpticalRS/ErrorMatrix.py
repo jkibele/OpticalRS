@@ -332,7 +332,7 @@ class ErrorMatrix( np.ndarray ):
         >>> print wundram_table2().observed_proportions().quantity_disagreement.round(4)
         0.1358
         """
-        return self.quantity_disagreements.sum() / 2
+        return self.quantity_disagreements.sum() / 2.0
 
     def allocation_disagreement_for_category( self, category ):
         """
@@ -359,7 +359,7 @@ class ErrorMatrix( np.ndarray ):
         >>> print wundram_table2().observed_proportions().allocation_disagreement.round(4)
         0.2075
         """
-        return self.allocation_disagreements.sum() / 2
+        return self.allocation_disagreements.sum() / 2.0
 
     @property
     def overall_accuracy( self ):
@@ -451,67 +451,6 @@ class ErrorMatrix( np.ndarray ):
         # print zero_col_rows
         emout = np.delete(np.delete(emout, zero_col_rows, 0), zero_col_rows, 1)
         return emout
-
-    def to_markdown(self):
-        """
-        Return a string version of the error matrix that makes a nice
-        table in markdown.
-        """
-        emstr = self.astype('string')
-        emstr[emstr == 'None'] = ''
-        rows = list()
-        ncols = emstr.shape[1]
-        for i, row in enumerate(emstr):
-            rows.append('|' + '|'.join(row) + '|')
-            if i == 0:
-                rows.append('-'.join(np.repeat('|', ncols + 1)))
-        return '\n'.join(rows)
-
-    def to_dataframe(self, cmap=None):
-        """
-        Return a pandas dataframe version of the `ErrorMatrix`. Do not
-        use with the `with_labels` property. Labels are included without that
-        and it will make this function fail.
-
-        Parameters
-        ----------
-        cmap : matplotlib colormap or `True`
-            If `None` (default), the returned dataframe will not be styled with
-            background colors. Otherwise cell colors will be added to the error
-            matrix when the data frame is viewed in Jupyter Notebook (aka
-            IPython Notebook). If `True` one of two default colormaps will be
-            used. First, an attempt will be made to get a colormap from seaborn.
-            If seaborn is not installed, an attempt will be made to get a
-            matplotlib colormap (that's a bit uglier). The use can also supply
-            their own colormap instead.
-
-        Returns
-        -------
-        pandas dataframe or dataframe styler
-            A dataframe representation of the error matrix that looks nice in a
-            Jupyter Notebook. If a cmap is applied, a `pandas.core.style.Styler`
-            object will be returned. The dataframe can be accessed via the
-            `.data` property of the `Styler`.
-        """
-        import pandas as pd
-        df = pd.DataFrame(self, columns=self.categories, index=self.categories)
-        df = df.replace('None',np.nan)
-        if cmap is None:
-            return df
-        else:
-            if cmap is True:
-                # Try to provide a default color map
-                try:
-                    from seaborn import light_palette
-                    cmap = light_palette('steelblue', as_cmap=True)
-                except ImportError:
-                    # seaborn is less common than matplotlib. I don't really
-                    # want to make either one a dependency for this module.
-                    import matplotlib.pyplot as plt
-                    cmap = plt.cm.GnBu
-            subst = df.columns.difference(['Totals','Accuracy'])
-            return df.style.background_gradient(cmap=cmap,
-                                                subset=(subst, subst))
 
     @property
     def with_totals( self ):
@@ -651,6 +590,72 @@ class ErrorMatrix( np.ndarray ):
 
     ###--------------- OUTPUT -----------------------------------------
 
+    def to_markdown(self):
+        """
+        Return a string version of the error matrix that makes a nice
+        table in markdown.
+        """
+        emstr = self.astype('string')
+        emstr[emstr == 'None'] = ''
+        rows = list()
+        ncols = emstr.shape[1]
+        for i, row in enumerate(emstr):
+            rows.append('|' + '|'.join(row) + '|')
+            if i == 0:
+                rows.append('-'.join(np.repeat('|', ncols + 1)))
+        return '\n'.join(rows)
+
+    def to_dataframe(self, cmap=None):
+        """
+        Return a pandas dataframe version of the `ErrorMatrix`. Do not
+        use with the `with_labels` property. Labels are included without that
+        and it will make this function fail.
+
+        Parameters
+        ----------
+        cmap : matplotlib colormap or `True`
+            If `None` (default), the returned dataframe will not be styled with
+            background colors. Otherwise cell colors will be added to the error
+            matrix when the data frame is viewed in Jupyter Notebook (aka
+            IPython Notebook). If `True` one of two default colormaps will be
+            used. First, an attempt will be made to get a colormap from seaborn.
+            If seaborn is not installed, an attempt will be made to get a
+            matplotlib colormap (that's a bit uglier). The use can also supply
+            their own colormap instead.
+
+        Returns
+        -------
+        pandas dataframe or dataframe styler
+            A dataframe representation of the error matrix that looks nice in a
+            Jupyter Notebook. If a cmap is applied, a `pandas.core.style.Styler`
+            object will be returned. The dataframe can be accessed via the
+            `.data` property of the `Styler`.
+        """
+        import pandas as pd
+        df = pd.DataFrame(self, columns=self.categories, index=self.categories)
+        df = df.replace('None',np.nan)
+        if cmap is None:
+            return df
+        else:
+            if cmap is True:
+                # Try to provide a default color map
+                try:
+                    from seaborn import light_palette
+                    cmap = light_palette('steelblue', as_cmap=True)
+                except ImportError:
+                    # seaborn is less common than matplotlib. I don't really
+                    # want to make either one a dependency for this module.
+                    import matplotlib.pyplot as plt
+                    cmap = plt.cm.GnBu
+            subst = df.columns.difference(['Totals','Accuracy'])
+            return df.style.background_gradient(cmap=cmap,
+                                                subset=(subst, subst))
+
+    def to_latex(self, **kwargs):
+        ff = kwargs.pop('float_format', '%.f')
+        nr = kwargs.pop('na_rep', '-')
+        return self.to_dataframe().to_latex(float_format=ff,
+                                            na_rep=nr, **kwargs)
 
     def save_csv( self, filepath, annotations=['with_accuracies_and_totals','with_labels'], rounding=None ):
         with open(filepath, 'wb') as f:

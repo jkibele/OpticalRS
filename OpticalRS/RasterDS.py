@@ -13,8 +13,10 @@ from osgeo import gdal, osr, ogr
 from osgeo.gdalconst import *
 from osgeo.gdal_array import NumericTypeCodeToGDALTypeCode
 import numpy as np
+from scipy.stats import mode as scipymode
 from RasterSubset import masked_subset
 from shapely.geometry import Polygon as shpPoly
+import shapely as shpl
 
 class RasterDS(object):
     """
@@ -272,6 +274,9 @@ class RasterDS(object):
         ----------
         point : ogr.Geometry or shapely.geometry.point.Point
             Specifically, this is expected to be a point geometry.
+        band_index : int
+            Index of the image band to sample. Zero indexed (band 1 = 0). For
+            single band rasters, this should be left at the default value (0).
 
         Returns
         -------
@@ -280,6 +285,65 @@ class RasterDS(object):
             band being sampled.
         """
         return self.spectrum_at_point(point)[band_index]
+
+    def radiused_point_check(self, point, search_value=None, radius=0,
+                             band_index=0, out_of_bounds=np.nan):
+        """
+        If `search_value` is found within `radius` of `point`, return that
+        value. If not, return the mode (most common value) within radius. If
+        `point` is not within `self.raster_extent`, return `out_of_bounds`. This
+        function is primarily intended for checking ground truth point
+        shapefiles against a thematic map raster. It is a more generous form of
+        accuracy assessment that allows for some positional mismatch between
+        ground truth points and the map. When `radius` is 0, this  function is
+        equivalent to `RasterDS.value_at_point`.
+
+        Parameters
+        ----------
+        point : ogr.Geometry or shapely.geometry.point.Point
+            Specifically, this is expected to be a point geometry.
+        search_value : numeric (int or float) or None
+            If `None` (default), the mode of raster values within `radius` of
+            `point` will be returned. If `search_value` is numeric,
+            `search_value` will be returned if found within `radius`, otherwise
+            the mode will be returned.
+        radius : float
+            The radius with which to buffer `point`. The units of this value
+            depend on the projection being used.
+        band_index : int
+            Index of the image band to sample. Zero indexed (band 1 = 0). For
+            single band rasters, this should be left at the default value (0).
+        out_of_bounds : float, int, or nan (default)
+            If `point` is not within `self.raster_extent`, `out_of_bounds` will
+            be returned.
+
+        Returns
+        -------
+        scalar value
+            The data type of the return depends on the data type of the raster
+            band being sampled.
+        """
+        if type(point) is ogr.Geometry:
+            # if this is an ogr geom, make it into a shapely geom
+            point = shpl.geometry.base.geom_from_wkb(point.ExportToWkb())
+        if point.within(self.raster_extent):
+            if radius == 0:
+                retval = self.value_at_point(point, band_index=band_index)
+            else:
+                clsarr = self.geometry_subset(point.buffer(radius),
+                                              all_touched=True)[...,band_index]
+                if search_value is not None \
+                and search_value in clsarr.compressed():
+                    retval = search_value
+                elif len(clsarr.compressed()) == 0:
+                    # This means that all of the returned values are masked and
+                    # therefore outside of the useful image bounds.
+                    retval = out_of_bounds
+                else:
+                    retval = scipymode(clsarr.compressed()).mode.item()
+        else:
+            retval = out_of_bounds
+        return retval
 
     def new_image_from_array(self,bandarr,outfilename=None,dtype=None,no_data_value=None):
         """
