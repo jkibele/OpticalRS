@@ -36,11 +36,11 @@ def equalize_band_masks( marr ):
     marr.mask = anymask
     return marr
 
-def equalize_array_masks(arr1, arr2):
+def equalize_array_masks(*arrs):
     """
-    Given two arrays, return them with only pixels unmasked in both arrays still
-    unmasked. Input arrays can have different numbers of bands but must have the
-    same numbers of rows and columns.
+    Given some arrays (2 or more), return them with only pixels unmasked in all
+    arrays still unmasked. Input arrays can have different numbers of bands but
+    must have the same numbers of rows and columns.
 
     Parameters
     ----------
@@ -48,21 +48,22 @@ def equalize_array_masks(arr1, arr2):
         An array of shape (RxC) or (RxCxBands).
     arr2 : np.ma.MaskedArray
         An array of shape (RxC) or (RxCxBands).
+    arrN : np.ma.MaskedArray
+        An array of shape (RxC) or (RxCxBands).
 
     Returns
     -------
-    tuple of 2 np.ma.MaskedArray
-        The original 2 arrays with the same 2d mask for each band. If a pixel
-        (RxC position) is masked in any band of either input array, it will be
+    tuple of N np.ma.MaskedArray
+        The original arrays with the same 2d mask for each band. If a pixel
+        (RxC position) is masked in any band of any input array, it will be
         masked in every band of the output.
     """
-    arr1 = np.ma.atleast_3d(arr1)
-    arr2 = np.ma.atleast_3d(arr2)
-    maskstack = np.append(arr1.mask, arr2.mask, axis=2)
-    maskany = maskstack.any(axis=2)
-    arr1out = mask3D_with_2D(arr1, maskany)
-    arr2out = mask3D_with_2D(arr2, maskany)
-    return arr1out, arr2out
+    arrs = [np.ma.atleast_3d(a) for a in arrs]
+    masks = [a.mask for a in arrs]
+    maskstack = np.dstack(masks)
+    combmask = maskstack.any(axis=2)
+    arrsout = [mask3D_with_2D(a, combmask) for a in arrs]
+    return arrsout
 
 def band_df( imarr, bandnames=None, equalize_masks=True ):
     """

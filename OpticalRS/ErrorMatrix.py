@@ -2,6 +2,7 @@ import numpy as np
 import csv, itertools
 
 # This was copied from my acc-assess plugin (https://github.com/jkibele/acc-assess)
+# ...but it's had a lot added to it since then.
 
 #### TEST DATA ####------------------------------------------------------------------------
 def congalton_table1():

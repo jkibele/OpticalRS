@@ -14,7 +14,8 @@ to that.
 from osgeo import gdal, ogr, osr
 from rasterstats.utils import bbox_to_pixel_offsets, shapely_to_ogr_type
 
-def mask_from_geom( geom, rds, band_num=1, epsg=32760, nodata_value=None, all_touched=False ):
+def mask_from_geom( geom, rds, band_num=1, epsg=32760, nodata_value=None,
+                    all_touched=False, full_extent=False ):
     """
     Return a binary mask to mask off everything outside of geom.
 
@@ -24,6 +25,9 @@ def mask_from_geom( geom, rds, band_num=1, epsg=32760, nodata_value=None, all_to
         Cells inside this geometry will be `False`. Cells outside will be `True`
     rds : RasterDS
         The raster dataset to create a mask for.
+    full_extent : bool
+        If `True`, return a mask that's the full extent of `rds`. If `False`
+        (default), return a mask that's the extent of `geom`.
 
     Returns
     -------
@@ -54,7 +58,10 @@ def mask_from_geom( geom, rds, band_num=1, epsg=32760, nodata_value=None, all_to
 
     ogr_geom_type = shapely_to_ogr_type(geom.type)
 
-    geom_bounds = list(geom.bounds)
+    if full_extent:
+        geom_bounds = list(rds.raster_extent.bounds)
+    else:
+        geom_bounds = list(geom.bounds)
 
     # calculate new pixel coordinates of the feature subset
     src_offset = bbox_to_pixel_offsets(rgt, geom_bounds, rsize)

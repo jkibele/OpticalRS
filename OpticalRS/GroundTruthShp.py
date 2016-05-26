@@ -52,7 +52,11 @@ class GroundTruthGDF(gpd.GeoDataFrame):
         hcd = dict()
         for cl in self[hcf].unique():
             if cl > 0:
-                hcd[cl] = self[self[hcf]==cl][hf].mode().item()
+                sers = self[self[hcf]==cl][hf]
+                if sers.count() > 1:
+                    hcd[cl] = sers.mode().item()
+                elif sers.count() > 0:
+                    hcd[cl] = sers.item()
         return hcd
 
     def __getitem__(self, key):
@@ -73,6 +77,11 @@ class GroundTruthGDF(gpd.GeoDataFrame):
 
     def comparison_df(self, rds, radius=0, generous=False, band_index=0,
                        out_of_bounds=np.nan, with_unclassed=False):
+        """
+        There can be problems if there are codes in the raster that do not exist
+        in the geodataframe. I should probably check for this condition and
+        raise an exception. No time right now.
+        """
         pred = self.compare_raster(rds, radius=radius, generous=generous,
                                    band_index=band_index,
                                    out_of_bounds=out_of_bounds)
