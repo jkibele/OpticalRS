@@ -17,6 +17,15 @@ Lyzenga, D.R., Malinas, N.P., Tanis, F.J., 2006. Multispectral bathymetry using
 a simple physically based algorithm. Geoscience and Remote Sensing, IEEE
 Transactions on 44, 2251 –2259. doi:10.1109/TGRS.2006.872909
 
+Armstrong, R.A., 1993. Remote sensing of submerged vegetation canopies for
+biomass estimation. International Journal of Remote Sensing 14, 621–627.
+doi:10.1080/01431169308904363
+
+Ji, W., Civco, D., Kennard, W., 1992. Satellite remote bathymetry: a new
+mechanism for modeling. Photogrammetric Engineering and Remote Sensing 58,
+545–549.
+
+
 Notes
 -----
 I developed this in ClassificationDev/Lyzenga/Lyzenga2006/DeepWaterMasking.ipynb
@@ -347,6 +356,29 @@ def dark_pixel_array( imarr, p=10, win_size=3, win_percentage=50 ):
     return dparr
 
 def deep_water_means(imarr, n_std=0, p=10, win_size=3, win_percentage=50):
+    """
+    Return deep water mean values for each band of `imarr`.
+
+    Parameters
+    ----------
+    imarr : numpy array (RxCxBands shape)
+        The multispectral image array. See `OpticalRS.RasterDS` for more info.
+    n_std : int or float
+        The number of standard deviations to subtract from the deep water means
+        before returning them. This can get you around the 'over deduction'
+        problem described by Ji et al. 1992. See Armstrong 1993 for an example
+        of this (though he attributes it to sensor noise).
+    p : int or float (Default value = 10)
+        The percentile of brightness to use as the threshold for declaring a
+        pixel 'dark'. Lyzenga et al. 2006 used the 10th percnetile so that's
+        the default.
+    win_size : int (Default value = 3)
+        The size of the moving window to be used. Lyzenga et al. 2006 uses a
+        3x3 window so the default is 3.
+    win_percentage : int or float (Default value = 50)
+        The percentage of the moving window that must be at or below the
+        threshold. Lyzenga et al. 2006 used 50% so that's the default.
+    """
     nbands = imarr.shape[-1]
     dpa = dark_pixel_array(imarr, p=p, win_size=win_size,
                            win_percentage=win_percentage)
