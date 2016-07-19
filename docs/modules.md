@@ -4,6 +4,7 @@ OpticalRS methods are organized into various modules. When appropriate, modules 
 
 Module | Description
 --|--
+AlbedoIndex | <sup>Code for generating a water column corrected image from multispectral imagery. This is a method of water column correction for habitat mapping. It is based on Maritorena et al. 1994 and is described in detail in Chapters 4 and 5 of my PhD thesis (Kibele, In Review). </sup> 
 ArrayUtils | <sup>This module contains functions that are applied to numpy array representations of images. Unless stated otherwise, image arrays are expected to be of shape (RowsxColumnsxN) where N is the number of bands. </sup> 
 LandMasking | <sup>This module contains methods for masking land in multispectral satellite imagery based on thresholding the NIR band and filtering the result for mask connectivity. This code also shows up in the [Multispectral Land Masker QGIS plugin](https://github.com/jkibele/LandMasker). </sup> 
 Lyzenga1978 | <sup>This module implements some of the methods described in Lyzenga 1978. These methods are used in depth estimation from multispectral imagery and in water column correction for bottom type classification. </sup> 
@@ -14,3 +15,4 @@ MSExposure | <sup>This module contains **POORLY TESTED** methods for adjusting t
 RasterDS | <sup>The RasterDS object will provide some utilities for getting raster data sets into and out of numpy array formats. The main feature is the simplification of reading and writing to GeoTiffs from numpy.array format. </sup> 
 RasterSubset | <sup>These are methods for subsetting a raster to get just the cells within a vector geometry. Much of this code is derived from the python [rasterstats package](https://github.com/perrygeo/python-raster-stats) and is dependent on some utilities from that package. I think this code could be rewritten to remove the dependency on having rasterstats installed but I'm not sure when I'll get around to that. </sup> 
 Sagawa2010 | <sup>In Sagawa et al. 2010 [1]\_, an alternative to Lyzenga's depth invariant index is proposed. Sagawa's reflectance index incorporates depth measurements in an attempt to correct for water column attenuation. This code is my attempt at implementing this method. </sup> 
+WV2RadiometricCorrection | <sup>This module reads parameters from a DigitalGlobe supplied xml file and applies radiometric correction to WorldView-2 imagery according to the instructions found here: </sup> 

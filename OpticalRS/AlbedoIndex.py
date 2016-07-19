@@ -3,25 +3,16 @@
 AlbedoIndex
 ===========
 
-Code for generating a depth invariant albedo index from multispectral imagery.
-This is a method of water column correction for habitat mapping. It is similar
-in concept to previous methods by Sagawa and Lyzenga but works in a different
-way. This method is the work of the author, Jared Kibele. ...except that it's
-actually not. I've recently found that Purkis and Pasterkamp came up with the
-same thing (only slightly better) back in 2003. I'll either change the name of
-this module or just revamp the comments and documentation to attribute the
-method properly. ...and I have to add the 1/0.54 term to account for loss of
-transmission through the air-water interface.
+Code for generating a water column corrected image from multispectral imagery.
+This is a method of water column correction for habitat mapping. It is based on
+Maritorena et al. 1994 and is described in detail in Chapters 4 and 5 of my PhD
+thesis (Kibele, In Review).
 
 References
 ----------
 
-Lyzenga, D.R., 1978. Passive remote sensing techniques for mapping water depth
-and bottom features. Appl. Opt. 17, 379–383. doi:10.1364/AO.17.000379
-
-Lyzenga, D.R., 1981. Remote sensing of bottom reflectance and water attenuation
-parameters in shallow water using aircraft and Landsat data. International
-Journal of Remote Sensing 2, 71–82. doi:10.1080/01431168108948342
+Kibele, J. (In Review). Submerged habitats from space: Increasing map production
+capacity with new methods and software. University of Auckland. PhD Thesis
 
 Maritorena, S., Morel, A., Gentili, B., 1994. Diffuse Reflectance of Oceanic
 Shallow Waters: Influence of Water Depth and Bottom Albedo. Limnology and

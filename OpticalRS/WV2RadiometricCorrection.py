@@ -3,9 +3,9 @@
 WV2RadiometricCorrection
 ========================
 
-**This module is not well tested.** (See Note for more info) This module reads
-parameters from a DigitalGlobe supplied xml file and applies radiometric
-correction to WorldView-2 imagery according to the instructions found here::
+This module reads parameters from a DigitalGlobe supplied xml file and applies
+radiometric correction to WorldView-2 imagery according to the instructions
+found here::
 
 DigitalGlobe, 2010. Radiometric Use of WorldView-2 Imagery.
 http://www.digitalglobe.com/downloads/Radiometric_Use_of_WorldView-2_Imagery.pdf
