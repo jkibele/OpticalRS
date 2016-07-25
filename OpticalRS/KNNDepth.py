@@ -4,8 +4,8 @@ KNN Depth
 =========
 
 Code for the empirical regression of depth from multispectral imagery using the
-k nearest neighbors technique (Kibele, In Review). This method should typically
-be accessed throught the `OpticalRS.DepthEstimator` module.
+k nearest neighbors technique (Kibele and Shears, In Review). This method should
+typically be accessed throught the `OpticalRS.DepthEstimator` module.
 
 References
 ----------

@@ -15,9 +15,9 @@ import OpticalRS
 
 outfile = 'modules.md'
 
-modules = ['AlbedoIndex','ArrayUtils','LandMasking','Lyzenga1978','Lyzenga1981',
-           'Lyzenga2006','MSDisplay','MSExposure','RasterDS','RasterSubset',
-           'Sagawa2010','WV2RadiometricCorrection']
+modules = ['AlbedoIndex','ArrayUtils','DepthEstimator','KNNDepth','LandMasking',
+           'Lyzenga1978','Lyzenga1981','Lyzenga2006','MSDisplay','MSExposure',
+           'RasterDS','RasterSubset','Sagawa2010','WV2RadiometricCorrection']
 
 def first_paragraph(dstr):
     """

@@ -4,7 +4,19 @@ DepthEstimator
 ==============
 
 Code for handling required data and producing depth estimates from multispectral
-satellite imagery.
+satellite imagery. KNN (Kibele and Shears, In Review) and linear methods
+(Lyzenga et al., 2006) are currently supported.
+
+References
+----------
+
+Kibele, J., Shears, N.T., In Press. Non-parametric empirical depth regression
+for bathymetric mapping in coastal waters. IEEE Journal of Selected Topics in
+Applied Earth Observations and Remote Sensing.
+
+Lyzenga, D.R., Malinas, N.P., Tanis, F.J., 2006. Multispectral bathymetry using
+a simple physically based algorithm. Geoscience and Remote Sensing, IEEE
+Transactions on 44, 2251–2259. doi:10.1109/TGRS.2006.872909
 """
 
 from RasterDS import RasterDS

@@ -6,6 +6,8 @@ Module | Description
 --|--
 AlbedoIndex | <sup>Code for generating a water column corrected image from multispectral imagery. This is a method of water column correction for habitat mapping. It is based on Maritorena et al. 1994 and is described in detail in Chapters 4 and 5 of my PhD thesis (Kibele, In Review). </sup> 
 ArrayUtils | <sup>This module contains functions that are applied to numpy array representations of images. Unless stated otherwise, image arrays are expected to be of shape (RowsxColumnsxN) where N is the number of bands. </sup> 
+DepthEstimator | <sup>Code for handling required data and producing depth estimates from multispectral satellite imagery. </sup> 
+KNNDepth | <sup>Code for the empirical regression of depth from multispectral imagery using the k nearest neighbors technique (Kibele, In Review). This method should typically be accessed throught the OpticalRS.DepthEstimator module. </sup> 
 LandMasking | <sup>This module contains methods for masking land in multispectral satellite imagery based on thresholding the NIR band and filtering the result for mask connectivity. This code also shows up in the [Multispectral Land Masker QGIS plugin](https://github.com/jkibele/LandMasker). </sup> 
 Lyzenga1978 | <sup>This module implements some of the methods described in Lyzenga 1978. These methods are used in depth estimation from multispectral imagery and in water column correction for bottom type classification. </sup> 
 Lyzenga1981 | <sup>This file will implement methods from Lyzenga 1981 for producing a depth invariant index from multispectral satellite imagery. Unless otherwise stated methods will expect image arrays in the shape of (Rows,Columns,Bands). </sup> 
