@@ -17,6 +17,15 @@ Lyzenga, D.R., Malinas, N.P., Tanis, F.J., 2006. Multispectral bathymetry using
 a simple physically based algorithm. Geoscience and Remote Sensing, IEEE
 Transactions on 44, 2251 –2259. doi:10.1109/TGRS.2006.872909
 
+Armstrong, R.A., 1993. Remote sensing of submerged vegetation canopies for
+biomass estimation. International Journal of Remote Sensing 14, 621–627.
+doi:10.1080/01431169308904363
+
+Ji, W., Civco, D., Kennard, W., 1992. Satellite remote bathymetry: a new
+mechanism for modeling. Photogrammetric Engineering and Remote Sensing 58,
+545–549.
+
+
 Notes
 -----
 I developed this in ClassificationDev/Lyzenga/Lyzenga2006/DeepWaterMasking.ipynb
@@ -30,7 +39,7 @@ from sklearn.linear_model import LinearRegression
 import itertools
 from collections import OrderedDict
 
-def get_fit( ind, x_train, y_train ):
+def get_fit( ind, x_train, y_train, n_jobs=4 ):
     """
     Get a linear regression fit object from Scikit-learn for eq. 9 from Lyzenga
     et al. 2006.
@@ -55,11 +64,11 @@ def get_fit( ind, x_train, y_train ):
     if x_train.ndim > 2:
         nbands = x_train.shape[-1]
         x_train = x_train.compressed().reshape(-1,nbands)
-    skols = LinearRegression()
+    skols = LinearRegression(n_jobs=n_jobs)
     skolsfit = skols.fit(x_train[...,ind],y_train.compressed())
     return skolsfit
 
-def get_selfscore( ind, x_train, y_train ):
+def get_selfscore( ind, x_train, y_train, n_jobs=4 ):
     """
     Get the r^2 value from linear regression fit object from Scikit-learn for
     eq. 9 from Lyzenga et al. 2006.
@@ -84,7 +93,7 @@ def get_selfscore( ind, x_train, y_train ):
     if x_train.ndim > 2:
         nbands = x_train.shape[-1]
         x_train = x_train.compressed().reshape(-1,nbands)
-    fit = get_fit( ind, x_train, y_train )
+    fit = get_fit( ind, x_train, y_train, n_jobs=n_jobs )
     return fit.score( x_train[...,ind], y_train.compressed() )
 
 def ranked_combos(x_img,y_depths,n=2):
@@ -147,7 +156,7 @@ def best_combo(x_img,y_depths,n=2):
     """
     return ranked_combos(x_img,y_depths,n).values()[0]
 
-def tuned_linear_model(x_img,y_depths,n=2):
+def tuned_linear_model(x_img,y_depths,n=2,n_jobs=4):
     """
     Find the best combo of `n` bands from `x_img` and return a model tuned to
     the training data (`x_img` and `y_depths`).
@@ -172,9 +181,9 @@ def tuned_linear_model(x_img,y_depths,n=2):
         http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html
     """
     ind = best_combo(x_img,y_depths,n)
-    return get_fit(ind,x_img,y_depths)
+    return get_fit(ind,x_img,y_depths,n_jobs=n_jobs)
 
-def fit_and_predict(x_train,y_train,x_img,n=2):
+def fit_and_predict(x_train,y_train,x_img,n=2,n_jobs=4):
     """
     Build Lyzenga depth estimation model trained on `x_train` (transformed
     imagery) and `y_train` (depths) and use it to estimate depths for `x_img`.
@@ -202,7 +211,7 @@ def fit_and_predict(x_train,y_train,x_img,n=2):
     """
     outarr = x_img[...,0].copy()
     ind = best_combo(x_train,y_train,n)
-    modl = get_fit(ind,x_train,y_train)
+    modl = get_fit(ind,x_train,y_train,n_jobs=n_jobs)
     pred = modl.predict(x_img[...,ind].compressed().reshape(-1,n))
     outarr[~outarr.mask] = pred
     return outarr
@@ -345,6 +354,38 @@ def dark_pixel_array( imarr, p=10, win_size=3, win_percentage=50 ):
     dparr = imarr.copy()
     dparr.mask = ~np.repeat( np.atleast_3d(dp), nbands, 2 )
     return dparr
+
+def deep_water_means(imarr, n_std=0, p=10, win_size=3, win_percentage=50):
+    """
+    Return deep water mean values for each band of `imarr`.
+
+    Parameters
+    ----------
+    imarr : numpy array (RxCxBands shape)
+        The multispectral image array. See `OpticalRS.RasterDS` for more info.
+    n_std : int or float
+        The number of standard deviations to subtract from the deep water means
+        before returning them. This can get you around the 'over deduction'
+        problem described by Ji et al. 1992. See Armstrong 1993 for an example
+        of this (though he attributes it to sensor noise).
+    p : int or float (Default value = 10)
+        The percentile of brightness to use as the threshold for declaring a
+        pixel 'dark'. Lyzenga et al. 2006 used the 10th percnetile so that's
+        the default.
+    win_size : int (Default value = 3)
+        The size of the moving window to be used. Lyzenga et al. 2006 uses a
+        3x3 window so the default is 3.
+    win_percentage : int or float (Default value = 50)
+        The percentage of the moving window that must be at or below the
+        threshold. Lyzenga et al. 2006 used 50% so that's the default.
+    """
+    nbands = imarr.shape[-1]
+    dpa = dark_pixel_array(imarr, p=p, win_size=win_size,
+                           win_percentage=win_percentage)
+    dpaavg = dpa.reshape(-1, nbands).mean(0).data
+    dpastd = dpa.reshape(-1, nbands).std(0).data
+    Rinf = dpaavg - (n_std * dpastd)
+    return Rinf
 
 def bg_thresholds( dark_arr, n_std=3 ):
     """

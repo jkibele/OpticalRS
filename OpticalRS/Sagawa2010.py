@@ -71,11 +71,13 @@ import numpy as np
 
 def band_attenuation_geometric(bandarr,deptharr):
     """
-    Given a single (Rows x Columns) band array and a depth array from the same
-    region, return -K*g value for that band. See section 2.2 and 2.3 from
-    Sagawa et al., 2010. The arrays you pass in should be taken from an area
-    with uniform substrate and varying depth. The arrays must also be the same
-    shape and, if masked, the masks must be the same.
+    It's probably better to use the `OpticalRS.ParameterEstimator` module to
+    calculate this value but this works too. Given a single (Rows x Columns)
+    band array and a depth array from the same region, return -K*g value for
+    that band. See section 2.2 and 2.3 from Sagawa et al., 2010. The arrays you
+    pass in should be taken from an area with uniform substrate and varying
+    depth. The arrays must also be the same shape and, if masked, the masks must
+    be the same.
 
     Parameters
     ----------
@@ -115,7 +117,7 @@ def band_attenuation_geometric(bandarr,deptharr):
     slope, intercept, r_value, p_value, std_err = linregress(X,np.log(Y))
     return slope, intercept, r_value
 
-def single_band_reflectance_index(single_band_arr,depth_arr,negKG):
+def single_band_reflectance_index(single_band_arr,depth_arr,Kg,deep_water_mean):
     """
     Calculate reflectance index for a single band according to equation 4 from
     Sagawa et al. 2010. The input array will represent the whole L_i - L_si
@@ -126,16 +128,20 @@ def single_band_reflectance_index(single_band_arr,depth_arr,negKG):
     ----------
     single_band_arr : numpy.array
         A single band Rows x Columns shaped array from the multispectral image
-        for which a reflectance index image is to be created. Sagawa et al. used
-        radiance values but you may be able to use DN or reflectance values as
-        well.
+        for which a reflectance index image is to be created.
     depth_arr : numpy.array
         An array of depths (in meters) of the same dimensions as the
         single_band_arr.
-    negKG : float
-        The -K*g value for this band. This is the slope value returned from the
-        `band_attenuation_geometric` method. See the docstring for that method
-        for more information.
+    Kg : float
+        The K*g value for this band. ...otherwise known as the two-way diffuse
+        attenuation coefficient or as the effective diffuse attenuation
+        coefficient (K) times the geometric factor (g). This is the slope value
+        returned from the `band_attenuation_geometric` method multiplied by -1.
+        See the docstring for that method for more information or use the
+        `OpticalRS.ParameterEstimator` module.
+    deep_water_mean : float
+        The averaged signal over deep water pixels for the image band. See the
+        `deep_water_means` method in `OpticalRS.ParameterEstimator`
 
     Returns
     -------
@@ -148,7 +154,8 @@ def single_band_reflectance_index(single_band_arr,depth_arr,negKG):
     --------
     band_attenuation_geometric
     """
-    RI = np.log( single_band_arr.squeeze() ) - negKG * depth_arr.squeeze()
+    # RI = np.exp(np.log( single_band_arr.squeeze() ) - negKG * depth_arr.squeeze())
+    RI = (single_band_arr - deep_water_mean) / np.exp(-1 * Kg * depth_arr)
     return RI
 
 def negKg_regression_array(bandarr,deptharr,band_list=None):
@@ -225,7 +232,7 @@ def negKg_array(bandarr,deptharr,band_list=None):
     nra = negKg_regression_array(bandarr,deptharr,band_list=band_list)
     return nra[:,0]
 
-def reflectance_index(bandarr,deptharr,negKgarr,band_list=None):
+def reflectance_index(bandarr,deptharr,Kgarr,deep_water_means,band_list=None):
     """
     Produce a reflectance index image for each band of an image and return
     it as a (Row, Column, Band) shaped array. For more information see the
@@ -242,6 +249,17 @@ def reflectance_index(bandarr,deptharr,negKgarr,band_list=None):
     deptharr : numpy.array
         An array of (Rows, Columns) shape with the same number of rows and
         columns as bandarr. It should contains depths in meters.
+    Kgarr : array-like of float
+        The K*g values for the bands. ...otherwise known as the two-way diffuse
+        attenuation coefficients or as the effective diffuse attenuation
+        coefficients (K) times the geometric factor (g). This is the slope value
+        returned from the `band_attenuation_geometric` method multiplied by -1.
+        See the docstring for that method for more information or use the
+        `OpticalRS.ParameterEstimator` module.
+    deep_water_means : array-like of floats
+        The mean signal over deep water for each band in `bandarr`. See
+        `OpticalRS.ParameterEstimator` module for ways to calculate this. `Rinf`
+        values (essentially the same thing) can be used as well.
     band_list : list of ints, optional
         A subset of the bands in bandarr. If supplied, only the values for the
         bands in the list will be calculated and returned. If left as `None`,
@@ -261,6 +279,7 @@ def reflectance_index(bandarr,deptharr,negKgarr,band_list=None):
     if not band_list:
         band_list = range(bandarr.shape[-1])
     for i in band_list:
-        RI = single_band_reflectance_index(bandarr[...,i], deptharr, negKgarr[i])
+        RI = single_band_reflectance_index(bandarr[...,i], deptharr, Kgarr[i],
+                                            deep_water_means[i])
         arrlist.append(RI)
     return np.ma.dstack(arrlist)

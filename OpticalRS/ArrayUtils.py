@@ -11,6 +11,9 @@ of images. Unless stated otherwise, image arrays are expected to be of shape
 import warnings
 import numpy as np
 import pandas as pd
+from tempfile import NamedTemporaryFile
+from scipy.misc import imsave
+from scipy import ndimage as nd
 
 def equalize_band_masks( marr ):
     """
@@ -33,11 +36,11 @@ def equalize_band_masks( marr ):
     marr.mask = anymask
     return marr
 
-def equalize_array_masks(arr1, arr2):
+def equalize_array_masks(*arrs):
     """
-    Given two arrays, return them with only pixels unmasked in both arrays still
-    unmasked. Input arrays can have different numbers of bands but must have the
-    same numbers of rows and columns.
+    Given some arrays (2 or more), return them with only pixels unmasked in all
+    arrays still unmasked. Input arrays can have different numbers of bands but
+    must have the same numbers of rows and columns.
 
     Parameters
     ----------
@@ -45,21 +48,22 @@ def equalize_array_masks(arr1, arr2):
         An array of shape (RxC) or (RxCxBands).
     arr2 : np.ma.MaskedArray
         An array of shape (RxC) or (RxCxBands).
+    arrN : np.ma.MaskedArray
+        An array of shape (RxC) or (RxCxBands).
 
     Returns
     -------
-    tuple of 2 np.ma.MaskedArray
-        The original 2 arrays with the same 2d mask for each band. If a pixel
-        (RxC position) is masked in any band of either input array, it will be
+    tuple of N np.ma.MaskedArray
+        The original arrays with the same 2d mask for each band. If a pixel
+        (RxC position) is masked in any band of any input array, it will be
         masked in every band of the output.
     """
-    arr1 = np.ma.atleast_3d(arr1)
-    arr2 = np.ma.atleast_3d(arr2)
-    maskstack = np.append(arr1.mask, arr2.mask, axis=2)
-    maskany = maskstack.any(axis=2)
-    arr1out = mask3D_with_2D(arr1, maskany)
-    arr2out = mask3D_with_2D(arr2, maskany)
-    return arr1out, arr2out
+    arrs = [np.ma.atleast_3d(a) for a in arrs]
+    masks = [a.mask for a in arrs]
+    maskstack = np.dstack(masks)
+    combmask = maskstack.any(axis=2)
+    arrsout = [mask3D_with_2D(a, combmask) for a in arrs]
+    return arrsout
 
 def band_df( imarr, bandnames=None, equalize_masks=True ):
     """
@@ -155,9 +159,10 @@ def mask3D_with_2D( imarr, mask, keep_old_mask=True ):
         `imarr` with `mask` applied to every band.
     """
     nbands = imarr.shape[-1]
-    rmask = np.repeat( np.expand_dims( mask, 2 ), nbands, axis=2 )
+    rmask = np.repeat( np.atleast_3d(mask), nbands, axis=2 )
     try:
-        out = np.ma.MaskedArray( imarr, mask=rmask, fill_value=imarr.fill_value, keep_mask=keep_old_mask )
+        out = np.ma.MaskedArray( imarr, mask=rmask, fill_value=imarr.fill_value,
+                                 keep_mask=keep_old_mask )
     except AttributeError:
         # if `imarr` is not a masked array, it won't have `.fill_value`.
         out = np.ma.MaskedArray( imarr, mask=rmask, )
@@ -264,7 +269,10 @@ def each_band_masked( imarr, funct, *args, **kwargs ):
         outlist.append( newband )
         ismalist.append( type(newband)==np.ma.MaskedArray )
     if False in ismalist:
-        warnings.warn( "A function returned an unmasked array when a masked array was expected. I'll try to copy the mask from the input array.")
+        # The mask copying seems to work well, so I'll comment out the warning.
+        # msg = """A function returned an unmasked array when a masked array was
+        #       expected. I'll try to copy the mask from the input array."""
+        # warnings.warn(msg)
         outarr = np.ma.dstack( outlist )
         outarr.mask = imarr.mask
         outarr.set_fill_value( imarr.fill_value )
@@ -306,3 +314,107 @@ def each_band( imarr, funct, *args, **kwargs ):
         return each_band_masked( imarr, funct, *args, **kwargs )
     else:
         return each_band_unmasked( imarr, funct, *args, **kwargs )
+
+def save_temp(imarr, rds=None):
+    """
+    Save the array to a temporary image file. Save to a geotiff if an `RasterDS`
+    template is provided, otherwise save to a png. Don't forget to delete the
+    tempfile!
+
+    Parameters
+    ----------
+    imarr : ndarray, MxN or MxNx3 or MxNx4
+        Array containing image values. If the shape is MxN, the  array
+        represents a grey-level image. Shape MxNx3 stores  the red, green and
+        blue bands along the last dimension.  An alpha layer may be included,
+        specified as the last  colour band of an MxNx4 array.
+
+    rds : OpticalRS.RasterDS instance
+        A RasterDS to use as a template to create a geotiff. The RDS needs to
+        have the same (R x C) dimensions as `imarr` but can have a different
+        number of bands.
+
+    Returns
+    -------
+    string
+        The file path to the saved image. Delete this when you are done with it!
+
+    Example
+    -------
+
+    In IPython on Unbuntu, you can put the following in a cell to  view a
+    temporary .png with the Eye of Gnome image viewer and delete the temp image
+    when you close the viewer:
+
+        > tmpfp = save_temp(imarr)
+        > !eog {tmpfp}
+        > !rm {tmpfp}
+
+    Similarly, this will save a temporary geotiff and open it in QGIS:
+
+        > tmpfp = save_temp(imarr, rds=imrds)
+        > !qgis {tmpfp}
+        > !rm {tmpfp}
+    """
+    NP2GDAL_CONVERSION = {
+        "bool": 1,
+        "uint8": 1,
+        "int8": 1,
+        "uint16": 2,
+        "int16": 3,
+        "uint32": 4,
+        "int32": 5,
+        "float32": 6,
+        "float64": 7,
+        "complex64": 10,
+        "complex128": 11,
+    }
+    if rds is None:
+        fileTemp = NamedTemporaryFile(delete=False, suffix='.png')
+        tfp = fileTemp.name
+        fileTemp.close()
+        imsave(tfp, imarr)
+    else:
+        fileTemp = NamedTemporaryFile(delete=False, suffix='.tif')
+        tfp = fileTemp.name
+        fileTemp.close()
+        rds.new_image_from_array(np.atleast_3d(imarr),
+                             tfp, dtype=NP2GDAL_CONVERSION[imarr.dtype.name])
+    print "Temp image created. Don't forget to delete the file: {}".format(tfp)
+    return tfp
+
+def invalid_fill_single(data, invalid=None):
+    """
+    Replace the value of invalid 'data' cells (indicated by 'invalid')
+    by the value of the nearest valid data cell. I got this off of stackexchange.
+
+    Input:
+        data:    numpy array of any dimension
+        invalid: a binary array of same shape as 'data'.
+                 data value are replaced where invalid is True
+                 If None (default), use: invalid  = np.isnan(data)
+
+    Output:
+        Return a filled array.
+    """
+    if invalid is None: invalid = np.isnan(data)
+
+    ind = nd.distance_transform_edt(invalid,
+                                    return_distances=False,
+                                    return_indices=True)
+    return np.ma.masked_where(data.mask, data[tuple(ind)])
+
+def invalid_fill(data, invalid):
+    """
+    Fill invalid data with values from nearest valid data. This function calls
+    `invalid_fill_single` on each image band seperately to avoid filling with
+    values from another band.
+    """
+    data = np.atleast_3d(data)
+    invalid = np.atleast_3d(invalid)
+    nbands = data.shape[-1]
+    outarr = data.copy()
+    for b in range(nbands):
+        outarr[...,b] = invalid_fill_single(outarr[...,b], invalid[...,b])
+    outarr = np.ma.masked_where(data.mask, outarr)
+    return outarr

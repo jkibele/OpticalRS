@@ -15,8 +15,14 @@ import AlbedoIndex
 import KNNDepth
 import GeoDFUtils
 import ParameterEstimator
+import GroundTruthShp
 from DepthEstimator import DepthEstimator
+from ErrorMatrix import ErrorMatrix
 
 __author__ = 'Jared Kibele'
 __email__ = 'jkibele@gmail.com'
+<<<<<<< HEAD
 __version__ = '0.1.1'
+=======
+__version__ = '1.0.0'
+>>>>>>> release/v1.0.0

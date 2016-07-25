@@ -52,6 +52,62 @@ class RasterShape(object):
 
         return self.rds.geometry_subset(geom, all_touched=all_touched)
 
+def compare_raster(gdf, column, rds, radius=0, generous=False,
+                   band_index=0, out_of_bounds=np.nan):
+    """
+    Compare habitat codes in `gdf` with codes in corresponding locations of
+    a raster habitat map (`rds`). This can be an exact point to point
+    comparison (when `radius`=0) or can be more forgiving. When `radius`>0
+    and `generous` is `False`, the mode (most common) value within `radius`
+    of each point will be returned. When `radius`>0 and `generous` is True,
+    ground truth habitat codes will be returned if found within `radius` of
+    each point, and the mode will be returned if not.
+
+    Parameters
+    ----------
+    gdf : geopandas.GeoDataFrame
+        A geopandas geo data frame of a point shapefile. Projection much match
+        that of `rds`.
+    column : string
+        The name of the column in `gdf` that contains the habitat codes. These
+        must be numeric codes that match the codes in `rds`.
+    rds : OpticalRS.RasterDS
+        The habitat map (or whatever raster) you want to compare to the
+        `GroundTruthShapefile` (self). The projection of this raster must
+        match the projection of the `GroundTruthShapefile`. If it doesn't
+        match, you might get results but they'll be wrong.
+    radius : float
+        The radius with which to buffer `point`. The units of this value
+        depend on the projection being used.
+    generous : boolean
+        If False (default), mode will be returned. If True, habitat code will be
+        returned if within `radius`. See function description for more info.
+    band_index : int
+        Index of the image band to sample. Zero indexed (band 1 = 0). For
+        single band rasters, this should be left at the default value (0).
+    out_of_bounds : float, int, or nan (default)
+        If `point` is not within `self.raster_extent`, `out_of_bounds` will
+        be returned.
+
+    Returns
+    -------
+    pandas Series
+        The values from `rds` that correspond to each point in `gdf`.
+    """
+    if generous:
+        rcheck = lambda row: rds.radiused_point_check(row.geometry,
+                                                      radius=radius,
+                                                      search_value=row[column],
+                                                      band_index=band_index,
+                                                      out_of_bounds=out_of_bounds)
+    else:
+        rcheck = lambda row: rds.radiused_point_check(row.geometry,
+                                                      radius=radius,
+                                                      search_value=None,
+                                                      band_index=band_index,
+                                                      out_of_bounds=out_of_bounds)
+    return gdf.apply(rcheck, axis=1)
+
 
 def point_sample_raster(gdf, rds, win_radius=0, stat_func=np.mean, col_names=None):
     """
@@ -74,11 +130,12 @@ def point_sample_raster(gdf, rds, win_radius=0, stat_func=np.mean, col_names=Non
         This can be any function that takes an array and an axis and returns
         a numeric value. In practice, this will probably be numpy statistical
         functions like `np.mean`, `np.median`, `np.std`, `np.var`, etc.
-    col_names : list or array-like
+    col_names : list, array-like, or string
         Names for the columns to be created in the output GeoDataFrame. The
         length must be the same as the number of bands in `rds`. If `None`, then
         `rds.band_names` will be used. This will generally mean that the columns
-        will be called 'band1', 'band2', etc.
+        will be called 'band1', 'band2', etc. A string can be used with `rds`
+        is a single band raster.
 
     Returns
     -------
@@ -87,6 +144,8 @@ def point_sample_raster(gdf, rds, win_radius=0, stat_func=np.mean, col_names=Non
     """
     if col_names==None:
         col_names = rds.band_names
+    elif type(col_names) == str:
+        col_names = [col_names]
     nbands = rds.gdal_ds.RasterCount
     winsize = 1 + win_radius * 2
     rast_poly = rds.raster_extent

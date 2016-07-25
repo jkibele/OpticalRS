@@ -2,7 +2,7 @@
 
 from GeoDFUtils import RasterShape
 from RasterDS import RasterDS
-from ArrayUtils import equalize_array_masks
+from ArrayUtils import equalize_array_masks, band_percentiles
 from AlbedoIndex import albedo_parameter_plots, est_curve_params, param_df,\
                         surface_refraction_correction, surface_reflectance_correction
 from WV2RadiometricCorrection import get_xmlroot, meanSunEl, meanOffNadirViewAngle
@@ -154,6 +154,24 @@ class ParameterEstimator(RasterShape):
         deep_water_means = dpa.reshape(-1,dpa.shape[-1]).mean(0)
         return deep_water_means.data
 
+    def dark_percentile(self, p=1):
+        """
+        This is a simpler alternative (of sorts) to `deep_water_means`. Rather
+        than using a version of Lyzenga's criteria to select the pixels, this
+        method just chooses gives the `p`th percetile of each band. This method
+        assumes that land has been masked from the image (shadows on land can be
+        darker than water and that could throw off the returns).
+
+        If you subtract these values from the image bands and curve fit, you'll
+        get `Rinf` values close to zero. This is like having the deep water as
+        completely black. The left over signal might approximate just what's
+        reflected from the bottom. ...or not. This is just something I messed
+        around with a bit.
+        """
+        # I had problems trying to subtract these values as type float64 from
+        # a float32 image so I'm casting them to float32 here.
+        return band_percentiles(self.full_image_array, p=p).astype(np.float32)
+
     def linear_parameters(self, deep_water_means=None, geometric_factor=2.0):
         if type(deep_water_means).__name__ == 'NoneType':
             dwm = self.deep_water_means()
@@ -269,11 +287,11 @@ def geometric_factor_from_imd(imd_path):
 ## Visualization ###########################################################
 
 def jerlov_Kd_plot(paramdf, columns='K', jerlov_legend=True,
-                    figure_title="$K$ Estimates and $K$ Values from Jerlov",
+                    figure_title="$K$ Estimates and $K_d$ Values from Jerlov",
                     legend_loc='best'):
     from matplotlib.cm import summer_r
-    from matplotlib import style
-    style.use('ggplot')
+    # from matplotlib import style
+    # style.use('ggplot')
     jerlov_df = jerlov_Kd()
     fig, ax = subplots(1,1, figsize=(8,6))
 

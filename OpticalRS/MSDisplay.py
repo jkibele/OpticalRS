@@ -100,8 +100,9 @@ def view_bands( img, **kwargs ):
         ax.imshow( barr[subset].squeeze(), cmap=cmap )
         ax.axis('off')
 
-def band_profile_display(imarr, p0, p1, displayband=None,
-                            bandnames=wv2_bandnames, cnames=cnames, n=1000):
+def band_profile_display(imarr, p0, p1, displayband=None, rolling_means=False,
+                            bandnames=wv2_bandnames, cnames=cnames, n=1000,
+                            legend=True, ylim=None, darr=None):
     """
     Plot the image `imarr`, a line between `p0` and `p1`, and the spectral
     profile of `imarr`'s bands along that line.
@@ -121,6 +122,10 @@ def band_profile_display(imarr, p0, p1, displayband=None,
         adaptive histogram equalized RGB image of the first 3 bands (2,1,0) when
         there are 3 or more bands in `imarr`. If `imarr` has fewer than 3 bands
         the default behavior is to display the first band.
+    rolling_means : boolean or int
+        If `False` (default) rolling means will not be displayed for band values.
+        If `True`, they will be displayed with a window of n/10. If an int is
+        provided, that will be used as the window size.
     bandnames : array-like
         Labels for the bands of `imarr`. The default values are the names of
         WorldView-2 bands. The number of items in `bandnames` should be greater
@@ -136,9 +141,8 @@ def band_profile_display(imarr, p0, p1, displayband=None,
 
     Returns
     -------
-    Nothing
-        This method dispalys a plot. Exactly how the plot is displayed is
-        determined by your matplotlib settings.
+    pyplot.figure
+        A pyplot Figure instance. This can be used to save the figure to a file.
     """
     imarr = np.atleast_3d(imarr)
     nbands = imarr.shape[-1]
@@ -151,20 +155,65 @@ def band_profile_display(imarr, p0, p1, displayband=None,
         disparr = imarr[...,displayband]
     x0, y0 = p0
     x1, y1 = p1
-    x, y = np.linspace(x0, x1, n), np.linspace(y0, y1, n)
-    zi = imarr[y.astype(np.int), x.astype(np.int), :]
-    df = pd.DataFrame(zi, columns=bandnames[:nbands])
+    df = values_along_line(imarr, p0, p1, darr=darr, n=n, bandnames=bandnames)
 
-    fig, (ax1, ax2) = subplots(ncols=2, figsize=(14,4), gridspec_kw={'width_ratios':[1,3.5]})
+    fig, (ax1, ax2) = subplots(ncols=2, figsize=(12,4), gridspec_kw={'width_ratios':[1,3]})
     ax1.imshow(disparr)
     ax1.plot([x0, x1], [y0, y1], 'ro-')
     ax1.set_axis_off()
     ax1.set_title("Profile Line")
 
-    if nbands == 1:
-        df.plot(ax=ax2, color=cnames[0])
+    if rolling_means:
+        plt_alp = 0.4
+        lgnd = False
     else:
-        df.plot(ax=ax2, color=cnames[:nbands])
-    ax2.set_xlabel("Point Along Line")
+        plt_alp = 1.0
+        lgnd = legend
+
+    if nbands == 1:
+        df.plot(ax=ax2, color=cnames[0], alpha=plt_alp, legend=lgnd)
+    else:
+        df.plot(ax=ax2, color=cnames[:nbands], alpha=plt_alp, legend=lgnd)
+
+    if rolling_means:
+        if type(rolling_means) is not bool:
+            nwin = int(rolling_means)
+        else:
+            nwin = int( round(n/10.0) )
+        rmns = pd.rolling_mean(df, nwin, center=True)
+        if nbands == 1:
+            rmns.plot(ax=ax2, color=cnames[0], legend=legend)
+        else:
+            rmns.plot(ax=ax2, color=cnames[:nbands], legend=legend)
+    if darr is None:
+        ax2.set_xlabel("Point Along Line")
+    else:
+        ax2.set_xlabel("Depth (m)")
     ax2.set_ylabel("Band Values")
     ax2.set_title("Band Values Along Profile Line")
+    if ylim is not None:
+        ax2.set_ylim( ylim )
+
+    return fig
+
+def values_along_line(imarr, p0, p1, darr=None, n=1000, bandnames=wv2_bandnames):
+    """
+    This will pull pixel values into a dataframe along a line from p0 to p1. It's
+    used in `band_profile_display`.
+    """
+    imarr = np.atleast_3d(imarr)
+    nbands = imarr.shape[-1]
+    x0, y0 = p0
+    x1, y1 = p1
+    x, y = np.linspace(x0, x1, n).astype(np.int), np.linspace(y0, y1, n).astype(np.int)
+    zi = imarr[y, x, :]
+    if darr is not None:
+        darr = darr.squeeze()
+        depths = darr[y, x]
+        df = pd.DataFrame(zi, columns=bandnames[:nbands], index=depths)
+        # df['depth'] = depths
+        df.sort_index(inplace=True)
+        df.index.name = 'Depth'
+    else:
+        df = pd.DataFrame(zi, columns=bandnames[:nbands])
+    return df

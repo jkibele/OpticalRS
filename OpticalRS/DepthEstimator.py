@@ -4,12 +4,25 @@ DepthEstimator
 ==============
 
 Code for handling required data and producing depth estimates from multispectral
-satellite imagery.
+satellite imagery. KNN (Kibele and Shears, In Review) and linear methods
+(Lyzenga et al., 2006) are currently supported.
+
+References
+----------
+
+Kibele, J., Shears, N.T., In Press. Non-parametric empirical depth regression
+for bathymetric mapping in coastal waters. IEEE Journal of Selected Topics in
+Applied Earth Observations and Remote Sensing.
+
+Lyzenga, D.R., Malinas, N.P., Tanis, F.J., 2006. Multispectral bathymetry using
+a simple physically based algorithm. Geoscience and Remote Sensing, IEEE
+Transactions on 44, 2251–2259. doi:10.1109/TGRS.2006.872909
 """
 
 from RasterDS import RasterDS
-from ArrayUtils import mask3D_with_2D
+from ArrayUtils import mask3D_with_2D, equalize_array_masks, equalize_band_masks
 import KNNDepth
+from Lyzenga2006 import dark_pixel_array, fit_and_predict, deep_water_means
 import numpy as np
 from sklearn.cross_validation import train_test_split
 
@@ -22,7 +35,7 @@ class DepthEstimator(object):
     - size of known_depths array = size of a single band of img
     - unmasked known_depths pixels are a subset of unmasked img pixels
     """
-    def __init__(self,img,known_depths,k=5,weights='uniform'):
+    def __init__(self,img,known_depths):
         self.img_original = img
         self.imrds = None
         try:
@@ -43,8 +56,6 @@ class DepthEstimator(object):
         else:
             self.kdrds = RasterDS(self.known_original)
         self.known_depth_arr = self.__known_depth_arr()
-        self.k = k
-        self.weights = weights
         self.imarr = self.__imarr()
         self.__mask_depths_with_no_image()
         self.nbands = self.imarr_flat.shape[-1]
@@ -182,7 +193,8 @@ class DepthEstimator(object):
                         train_size=train_size,random_state=random_state)
         return DepthEstimator(im_train,dep_train),DepthEstimator(im_test,dep_test)
 
-    def knn_depth_model(self,k=5,weights='uniform'):
+    def knn_depth_model(self,k=5,weights='uniform',metric='minkowski',
+                        n_jobs=4, **kwargs):
         """
         Return a trained KNN depth model. See `OpticalRS.KNNDepth.train_model`
         for more information. This is really just a wrapper over the
@@ -190,16 +202,38 @@ class DepthEstimator(object):
         """
         return KNNDepth.train_model(self.known_imarr_flat.compressed().reshape(-1,self.nbands),
                                     self.known_depth_arr_flat.compressed(),
-                                    k=k,weights=weights)
+                                    k=k, weights=weights,
+                                    metric=metric, n_jobs=n_jobs, **kwargs)
 
-    def knn_depth_estimation(self,k=5,weights='uniform'):
+    def knn_depth_estimation(self,k=5,weights='uniform',
+                             metric='minkowski',n_jobs=4, **kwargs):
         """
         Train a KNN regression model with `known_depths` and corresponding
         pixels from `img`. Then use that model to predict depths for all pixels
         in `img`. Return a single band array of estimated depths.
         """
         out = self.imarr[...,0].copy()
-        knnmodel = self.knn_depth_model(k=k, weights=weights)
+        knnmodel = self.knn_depth_model(k=k, weights=weights,
+                                        metric=metric, n_jobs=n_jobs, **kwargs)
         ests = knnmodel.predict(self.imarr_compressed)
         out[~out.mask] = ests
         return out
+
+    def lyzenga_depth_estimation(self, Rinf=None, bands=None, n_std=0,
+                                    n_jobs=4):
+        """
+        This will implement the linear depth estimation method described in
+        Lyzenga et al. 2006. This doc string needs a bit more detail but I don't
+        have time right now. Check `OpticalRS.Lyzenga2006` for more detail. This
+        method just wraps some of the code from that module to make it easier to
+        run.
+        """
+        if bands is None:
+            bands = self.nbands
+        if Rinf is None:
+            Rinf = deep_water_means(self.imarr[...,:bands], n_std=n_std)
+        X = np.ma.log(self.imarr[...,:bands] - Rinf)
+        X = equalize_band_masks(X)
+        # need to re-equalize, might have lost pixels in log transform
+        Xtrain, deparr = equalize_array_masks(X, self.known_depth_arr)
+        return fit_and_predict(Xtrain, deparr, X, n_jobs=n_jobs)

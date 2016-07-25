@@ -3,25 +3,20 @@
 AlbedoIndex
 ===========
 
-Code for generating a depth invariant albedo index from multispectral imagery.
-This is a method of water column correction for habitat mapping. It is similar
-in concept to previous methods by Sagawa and Lyzenga but works in a different
-way. This method is the work of the author, Jared Kibele. ...except that it's
-actually not. I've recently found that Purkis and Pasterkamp came up with the
-same thing (only slightly better) back in 2003. I'll either change the name of
-this module or just revamp the comments and documentation to attribute the
-method properly. ...and I have to add the 1/0.54 term to account for loss of
-transmission through the air-water interface.
+Code for generating a water column corrected image from multispectral imagery.
+This is a method of water column correction for habitat mapping. It is based on
+Maritorena et al. 1994 and is described in detail in Chapters 4 and 5 of my PhD
+thesis (Kibele, In Review).
 
 References
 ----------
 
-Lyzenga, D.R., 1978. Passive remote sensing techniques for mapping water depth
-and bottom features. Appl. Opt. 17, 379–383. doi:10.1364/AO.17.000379
+Kibele, J. (In Review). Submerged habitats from space: Increasing map production
+capacity with new methods and software. University of Auckland. PhD Thesis
 
-Lyzenga, D.R., 1981. Remote sensing of bottom reflectance and water attenuation
-parameters in shallow water using aircraft and Landsat data. International
-Journal of Remote Sensing 2, 71–82. doi:10.1080/01431168108948342
+Maritorena, S., Morel, A., Gentili, B., 1994. Diffuse Reflectance of Oceanic
+Shallow Waters: Influence of Water Depth and Bottom Albedo. Limnology and
+Oceanography 39, 1689–1703.
 
 Philpot, W.D., 1987. Radiative transfer in stratified waters: a single-
 scattering approximation for irradiance. Applied Optics 26, 4123.
@@ -47,13 +42,14 @@ from pylab import subplots
 from matplotlib.pyplot import tight_layout
 from Const import wv2_center_wavelength, jerlov_Kd
 
-def myR0(z,Rinf,Ad,g):
+def myR0(z,Rinf,Ad,Kg):
     """
     This is the singly scattering irradiance (SSI) model (Philpot 1987) for
     irradiance reflectance immediately below the water surface for optically
     shallow, homogeneous water (eq. 2 from Philpot 1989). This model is
     essentially the same as the one discussed in appendix A of Lyzenga 1978.
-    I've rearranged it a bit (from eq.2, Philpot 1989) but it's equivalent.
+    I've rearranged it a bit (from eq.2, Philpot 1989) but it's equivalent. This
+    model is probably best described in Maritorena et al. 1994.
 
     Parameters
     ----------
@@ -63,7 +59,7 @@ def myR0(z,Rinf,Ad,g):
         Irradiance reflectance of an optically deep water column.
     Ad : float or array-like of same size as `z`.
         Irradiance reflectance (albedo) of the bottom.
-    g : float
+    Kg : float
         A 2 way effective attenuation coefficient of the water. Really
         equivalent to attenuation coefficient (K) times geometric factor (g).
 
@@ -72,7 +68,7 @@ def myR0(z,Rinf,Ad,g):
     R(0-) : array of floats
         Irradiance reflectance immediately below the water surface.
     """
-    return Rinf + (Ad - Rinf) * np.exp(-1*g*z)
+    return Rinf + (Ad - Rinf) * np.exp(-1*Kg*z)
 
 def param_df(zsand, Rsand, p0=None, geometric_factor=2.0):
     """
@@ -120,7 +116,7 @@ def param_df(zsand, Rsand, p0=None, geometric_factor=2.0):
 
 def est_curve_params(zsand, Rsand, p0=None):
     """
-    Estimate `Rinf`, `Ad`, and `g` given sand depths `zsand` and corresponging
+    Estimate `Rinf`, `Ad`, and `Kg` given sand depths `zsand` and corresponging
     radiances `Rsand`. Estimate is made by curve fitting using
     `scipy.optimize.curve_fit`.
 
@@ -140,7 +136,7 @@ def est_curve_params(zsand, Rsand, p0=None):
     -------
     np.array
         A 3 column row of parameters for each band of `Rsand`. Column 1 is the
-        Rinf values, col 2 is the estAd values, and col 3 is the est_g values.
+        Rinf values, col 2 is the estAd values, and col 3 is the est_Kg values.
     """
     nbands = Rsand.shape[-1]
     outlist = []
@@ -151,7 +147,7 @@ def est_curve_params(zsand, Rsand, p0=None):
 
 def est_curve_params_one_band(zsand,Rsand,p0=None):
     """
-    Estimate `Rinf`, `Ad`, and `g` given sand depths `zsand` and corresponging
+    Estimate `Rinf`, `Ad`, and `Kg` given sand depths `zsand` and corresponging
     radiances `Rsand`. Estimate is made by curve fitting using
     `scipy.optimize.curve_fit`.
 
@@ -173,7 +169,7 @@ def est_curve_params_one_band(zsand,Rsand,p0=None):
         Estimated irradiance reflectance of an optically deep water column.
     estAd : float
         Estimated bottom albedo for `Rsand`.
-    est_g : float
+    est_Kg : float
         Estimated 2 way effective attenuation coefficient of the water. Really
         equivalent to attenuation coefficient (K) times geometric factor (g).
 
@@ -190,13 +186,13 @@ def est_curve_params_one_band(zsand,Rsand,p0=None):
     if np.ma.is_masked(Rsand):
         Rsand = Rsand.compressed()
     p, pcov = curve_fit(myR0,zsand.astype('float32'),Rsand.astype('float32'),p0)
-    estRinf, estAd, est_g = p
-    return estRinf, estAd, est_g
+    estRinf, estAd, est_Kg = p
+    return estRinf, estAd, est_Kg
 
-def estAd_single_band(z,L,Rinf,g):
+def estAd_single_band(z,L,Rinf,Kg):
     """
     Estimate the albedo `Ad` for radiance `L` at depth `z` assuming `Rinf` and
-    `g`. This method assumes that L is a single band and will return estimated
+    `Kg`. This method assumes that L is a single band and will return estimated
     Ad (albedo index) values for that single band.
 
     Parameters
@@ -209,7 +205,7 @@ def estAd_single_band(z,L,Rinf,g):
         radiance values. This is a single band.
     Rinf : float
         Irradiance reflectance of an optically deep water column.
-    g : float
+    Kg : float
         A 2 way effective attenuation coefficient of the water. Really
         equivalent to attenuation coefficient (K) times geometric factor (g).
 
@@ -218,13 +214,13 @@ def estAd_single_band(z,L,Rinf,g):
     Ad : float or array-like of same size as `z`.
         Irradiance reflectance (albedo) of the bottom.
     """
-    Ad = (L - Rinf + Rinf * np.exp(-1*g*z)) / np.exp(-1*g*z)
+    Ad = (L - Rinf + Rinf * np.exp(-1*Kg*z)) / np.exp(-1*Kg*z)
     return Ad
 
-def estAd(z,L,Rinf,g):
+def estAd(z,L,Rinf,Kg):
     """
     Estimate the albedo `Ad` for radiance `L` at depth `z` assuming `Rinf` and
-    `g`.
+    `Kg`.
 
     Parameters
     ----------
@@ -236,7 +232,7 @@ def estAd(z,L,Rinf,g):
         radiance values. Shape: (rows, columns, bands)
     Rinf : float
         Irradiance reflectance of an optically deep water column.
-    g : float
+    Kg : float
         A 2 way effective attenuation coefficient of the water. Really
         equivalent to attenuation coefficient (K) times geometric factor (g).
 
@@ -247,9 +243,9 @@ def estAd(z,L,Rinf,g):
     """
     nbands = L.shape[-1]
     Rinf = Rinf[:nbands]
-    g = g[:nbands]
+    Kg = Kg[:nbands]
     z = np.repeat(np.atleast_3d(z), nbands, axis=2)
-    Ad = (L - Rinf + Rinf * np.exp(-1*g*z)) / np.exp(-1*g*z)
+    Ad = (L - Rinf + Rinf * np.exp(-1*Kg*z)) / np.exp(-1*Kg*z)
     return Ad
 
 def surface_reflectance_correction(imarr, nir_bands=[6,7]):
@@ -268,8 +264,8 @@ def surface_refraction_correction(imarr):
 def albedo_parameter_plots(imarr, darr, params=None, plot_params=True,
                            ylabel='Reflectance', visible_only=True,
                            figsize=(12,7)):
-    from matplotlib import style
-    style.use('ggplot')
+    # from matplotlib import style
+    # style.use('ggplot')
     if params is None:
         params = est_curve_params(darr, imarr)
     if visible_only:
@@ -286,7 +282,7 @@ def albedo_parameter_plots(imarr, darr, params=None, plot_params=True,
         plotz = np.arange(darr.min(), darr.max(), 0.2)
         if plot_params:
             ax.plot(plotz, myR0(plotz, *cp), c='brown')
-        ax.set_xlabel('Depth')
+        ax.set_xlabel('Depth (m)')
         ax.set_ylabel(ylabel)
         btxt = "Band{b} $R_\infty = {R:.2f}$\n$A^{{toa}} = {A:.2f}$, $K_g = {Kg:.2f}$ "\
                 .format(b=i+1, R=cp[0], A=cp[1], Kg=cp[2])
@@ -328,7 +324,7 @@ def depthboard(zmin=0.5,zmax=20.0,errFactor=0.0):
         r = np.vstack((r,zGen(errFactor,150,zmin,zmax)))
     return r
 
-def radiance_checkerboard(sAd=0.35,kAd=0.2,Rinf=0.25,g=0.16,satErr=0.005):
+def radiance_checkerboard(sAd=0.35,kAd=0.2,Rinf=0.25,Kg=0.16,satErr=0.005):
     Ad = checkerboard(sAd=sAd,kAd=kAd)
     z = depthboard()
-    return myR0(z,Rinf,Ad,g) + satErr * np.random.normal(size=150**2).reshape(150,150)
+    return myR0(z,Rinf,Ad,Kg) + satErr * np.random.normal(size=150**2).reshape(150,150)
