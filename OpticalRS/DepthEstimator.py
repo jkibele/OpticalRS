@@ -209,6 +209,13 @@ class DepthEstimator(object):
 
     def lyzenga_depth_estimation(self, Rinf=None, bands=None, n_std=0,
                                     n_jobs=4):
+        """
+        This will implement the linear depth estimation method described in
+        Lyzenga et al. 2006. This doc string needs a bit more detail but I don't
+        have time right now. Check `OpticalRS.Lyzenga2006` for more detail. This
+        method just wraps some of the code from that module to make it easier to
+        run.
+        """
         if bands is None:
             bands = self.nbands
         if Rinf is None:
