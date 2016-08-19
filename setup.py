@@ -13,7 +13,7 @@ import re
 #     for line in f:
 #         if line.startswith('__version__'):
 #             optrs_version = '.'.join( re.findall(r'\d+', line) )
-optrs_version = '1.0.1'
+optrs_version = '1.0.2'
 
 try:
     from setuptools import setup, find_packages
@@ -48,10 +48,9 @@ setup(
     author='Jared Kibele',
     author_email='jkibele@gmail.com',
     url='https://github.com/jkibele/OpticalRS',
-    packages=find_packages('OpticalRS', exclude=["tests.*", "tests"]),
-    # [
-    #     'OpticalRS',
-    # ],
+    packages=[
+        'OpticalRS',
+    ],
     package_dir={'OpticalRS':
                  'OpticalRS'},
     include_package_data=True,
