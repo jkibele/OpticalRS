@@ -7,10 +7,13 @@ import re
 
 # read the version number out of __init__ so I don't have to remember to edit
 # it in 2 places.
-with open('OpticalRS/__init__.py') as f:
-    for line in f:
-        if line.startswith('__version__'):
-            optrs_version = '.'.join( re.findall(r'\d+', line) )
+# This doesn't work when installing from pypi. I guess the files aren't really
+# there yet.
+# with open('OpticalRS/__init__.py') as f:
+#     for line in f:
+#         if line.startswith('__version__'):
+#             optrs_version = '.'.join( re.findall(r'\d+', line) )
+optrs_version = '1.0.0'
 
 try:
     from setuptools import setup
@@ -18,8 +21,9 @@ except ImportError:
     from distutils.core import setup
 
 
-readme = open('README.md').read()
-history = open('HISTORY.rst').read().replace('.. :changelog:', '')
+# readme = open('README.md').read()
+# history = open('HISTORY.rst').read().replace('.. :changelog:', '')
+readme = 'OpticalRS is a free and open source Python implementation of passive optical remote sensing methods for the derivation of bathymetric maps and maps of submerged habitats.'
 
 requirements = ['numpy',
                 'pandas',
@@ -40,7 +44,7 @@ setup(
     name='OpticalRS',
     version=optrs_version,
     description='OpticalRS is a Python implementation of optical remote sensing methods for mapping of submerged habitats.',
-    long_description=readme + '\n\n' + history,
+    long_description=readme,
     author='Jared Kibele',
     author_email='jkibele@gmail.com',
     url='https://github.com/jkibele/OpticalRS',
