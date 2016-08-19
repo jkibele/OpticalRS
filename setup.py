@@ -48,7 +48,7 @@ setup(
     author='Jared Kibele',
     author_email='jkibele@gmail.com',
     url='https://github.com/jkibele/OpticalRS',
-    packages=find_packages(exclude=["tests.*", "tests"]),
+    packages=find_packages('OpticalRS', exclude=["tests.*", "tests"]),
     # [
     #     'OpticalRS',
     # ],
