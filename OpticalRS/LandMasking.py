@@ -13,6 +13,37 @@ quite similar, in concept, to those used in Lyzenga et al. 2006.
 """
 import numpy as np
 from scipy.ndimage.measurements import label
+from scipy.signal import argrelextrema
+from scipy.stats import gaussian_kde
+
+def auto_water_threshold(imarr, nir_band=-1):
+    """
+    Estimate the NIR band threshold for masking water. This assumes that there
+    will be a big peak in the KDE of the NIR band. It picks the first relative
+    minimum after the global maximum of the KDE for the nir_band.
+
+    Parameters
+    ----------
+    imarr : band array (see OpticalRS.RasterDS.band_array)
+        The image array.
+    nir_band : integer
+        The (zero-indexed) band number to use as the NIR band. Typically, this
+        should be the longest wavelength NIR band available. The default value
+        (-1) will use the last band in the array.
+
+    Returns
+    -------
+    threshold
+        The NIR value below which pixels should be considered water and above
+        which pixels should be considered land.    
+    """
+    nir = imarr[...,nir_band].compressed()
+    dens = gaussian_kde(nir)
+    xs = np.linspace(nir.min(), nir.max(), 100)
+    y = dens(xs)
+    waterpeak = xs[np.argmax(y)]
+    relmins = xs[argrelextrema(y, np.less)]
+    return np.ma.masked_less_equal(relmins, waterpeak)[0]
 
 def connectivity_filter(in_array,threshold=1000,structure=None):
     """
