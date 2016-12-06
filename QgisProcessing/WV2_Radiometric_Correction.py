@@ -47,8 +47,9 @@ img = open_raster(Multispectral_image)
 bandarr = bandarr_from_ds(img)
 
 if TOA_Reflectance:
-    bandarr = toa_radiance_multiband(bandarr,XML_File)
-else:
     bandarr = toa_reflectance_multiband(bandarr,XML_File)
+else:
+    bandarr = toa_radiance_multiband(bandarr,XML_File)
 
-output_gtif_like_img(img,bandarr,Output_raster)
+output_gtif_like_img(img,bandarr,Output_raster,dtype=GDT_Float32,
+                     no_data_value=0.0)
