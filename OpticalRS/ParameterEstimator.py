@@ -137,7 +137,7 @@ class ParameterEstimator(RasterShape):
         if self.gdf_query == None:
             geom = self.gdf.ix[0].geometry
         else:
-            geom = gdf.query(self.gdf_query).ix[0].geometry
+            geom = self.gdf.query(self.gdf_query).iloc[0].geometry
         return geom
 
     def deep_water_means(self, p=10, win_size=3, win_percentage=50):
