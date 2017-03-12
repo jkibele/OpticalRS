@@ -28,9 +28,18 @@ from sklearn.cross_validation import train_test_split
 
 class DepthEstimator(object):
     """
-    I want to be able to chuck in the image and the known depths in a number of
-    different formats and do depth prediction stuff with it.
+    Once initialized, this object can do a bunch of tasks related to depth
+    estimation.
 
+    Parameters
+    ----------
+    img : OpticalRS.RasterDS, numpy image array, or file path to image
+        This is the multispectral image for which depth is to be estimated.
+    known_depths : OpticalRS.RasterDS, numpy image array, or file path to image
+        A raster of known depths.
+
+    Notes
+    -----
     Assumptions:
     - size of known_depths array = size of a single band of img
     - unmasked known_depths pixels are a subset of unmasked img pixels
