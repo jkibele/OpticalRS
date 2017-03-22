@@ -10,6 +10,8 @@ import geopandas as gpd
 from osgeo import osr
 import numpy as np
 from RasterDS import RasterDS
+from scipy import stats
+import matplotlib.pyplot as plt
 
 class RasterShape(object):
     """
@@ -51,6 +53,52 @@ class RasterShape(object):
             geom = gdf.query(gdf_query).ix[0].geometry
 
         return self.rds.geometry_subset(geom, all_touched=all_touched)
+
+    def rmse(self, rast_col='Raster Value', point_col='Point Value'):
+        df = self.gdf
+        df[rast_col] = self.point_sample()
+        errs = (df[point_col] - df[rast_col])
+        return np.sqrt(np.square(errs).sum() / float(errs.count()))
+
+    def rsquared(self, rast_col='Raster Value', point_col='Point Value'):
+        df = self.gdf
+        df[rast_col] = self.point_sample()
+        return df[[rast_col,point_col]].corr().ix[0,1]**2
+
+    def point_sample(self):
+        """
+        If `self.shp` is a point shapefile, sample `self.rds` at each point and
+        return a `geopandas.GeoSeries` of the results.
+        """
+        gser = self.gdf.geometry.apply(lambda p: self.rds.value_at_point(p))
+        gser[gser==self.rds.band_array.fill_value] = np.nan
+        return gser
+
+    def seaborn_jointplot(self, rast_col='Raster Value', point_col='Point Value'):
+        import seaborn as sns
+        df = self.gdf
+        df[rast_col] = self.point_sample()
+        def r2(x,y):
+            return stats.pearsonr(x,y)[0] ** 2
+        fig = sns.jointplot(rast_col, point_col, data=df, kind='reg',
+                            stat_func=r2)
+        return fig
+
+    def hexbin_plot(self, rast_col='Raster Value', point_col='Point Value'):
+        df = self.gdf
+        df[rast_col] = self.point_sample()
+        fig,ax = plt.subplots(1,1)
+        mapa = ax.hexbin(df[rast_col],df[point_col],mincnt=1,bins=None,gridsize=500,\
+                             cmap=plt.cm.jet)
+        ax.set_ylabel(point_col)
+        ax.set_xlabel(rast_col)
+        ax.set_aspect('equal')
+        dmin = df[point_col].min()
+        dmax = df[point_col].max()
+        ax.plot([dmin,dmax],[dmin,dmax],c='white',alpha=0.6)
+        ax.set_title(r"RMSE: {:.2f}, $R^2$: {:.2f}".format(self.rmse(rast_col,point_col),\
+                                                        self.rsquared(rast_col,point_col)))
+        return fig
 
 def compare_raster(gdf, column, rds, radius=0, generous=False,
                    band_index=0, out_of_bounds=np.nan):
