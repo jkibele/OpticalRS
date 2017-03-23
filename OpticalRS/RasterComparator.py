@@ -109,7 +109,7 @@ class RasterComparator(object):
             return stats.pearsonr(x,y)[0] ** 2
         g = sns.jointplot('true', 'pred', data=self.dataframe, kind='reg', stat_func=r2)
 
-    def hexbin_plot(self):
+    def hexbin_plot(self, colorbar=True):
         df = self.dataframe
         fig,ax = plt.subplots(1,1)
         mapa = ax.hexbin(df.true,df.pred,mincnt=1,bins=None,gridsize=500,\
@@ -121,6 +121,8 @@ class RasterComparator(object):
         dmax = df.pred.max()
         ax.plot([dmin,dmax],[dmin,dmax],c='white',alpha=0.6)
         ax.set_title(r"RMSE: {:.2f}, $R^2$: {:.2f}".format(self.rmse, self.rsquared))
+        if colorbar:
+            fig.colorbar(mapa)
         return fig
 
     def error_array(self):
