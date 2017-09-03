@@ -43,6 +43,10 @@ The following shell script can be used to install OpticalRS and all of its depen
     # gdal libraries are required by some of the python requirements installed by pip
     sudo apt-get install -y python-gdal libgdal1h gdal-bin libgdal-dev
 
+    # Export GDAL header location
+    export CPLUS_INCLUDE_PATH=/usr/include/gdal
+    export C_INCLUDE_PATH=/usr/include/gdal
+
     # This finishes up the dependencies and finally the actual OpticalRS code
     sudo pip install OpticalRS
 
