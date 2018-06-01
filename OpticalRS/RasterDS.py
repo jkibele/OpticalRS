@@ -261,7 +261,13 @@ class RasterDS(object):
         band_values = []
         for bnum in range( 1, self.gdal_ds.RasterCount + 1 ):
             band = self.gdal_ds.GetRasterBand( bnum )
-            data = band.ReadAsArray(xOffset, yOffset, 1, 1)[0,0]
+            arr = band.ReadAsArray(xOffset, yOffset, 1, 1)
+            if arr is None:
+                # this should cover situations where the point is outside the
+                # raster extent and prevent a TypeError
+                data = np.nan
+            else:
+                data = arr[0,0]
             band_values.append( data )
         return np.array( band_values )
 

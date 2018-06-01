@@ -25,6 +25,7 @@ except ImportError:
 # history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 readme = 'OpticalRS is a free and open source Python implementation of passive optical remote sensing methods for the derivation of bathymetric maps and maps of submerged habitats.'
 
+
 requirements = ['numpy',
                 'pandas',
                 'statsmodels',

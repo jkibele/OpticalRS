@@ -10,9 +10,10 @@ typically be accessed throught the `OpticalRS.DepthEstimator` module.
 References
 ----------
 
-Kibele, J., Shears, N.T., In Review. Non-parametric empirical depth regression
-for bathymetric mapping in coastal waters. IEEE Journal of Selected Topics in
-Applied Earth Observations and Remote Sensing.
+Kibele, J., & Shears, N. T. (2016). Nonparametric Empirical Depth Regression for
+Bathymetric Mapping in Coastal Waters. IEEE Journal of Selected Topics in
+Applied Earth Observations and Remote Sensing, 1–9.
+https://doi.org/10.1109/JSTARS.2016.2598152
 
 """
 

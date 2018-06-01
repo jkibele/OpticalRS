@@ -137,7 +137,7 @@ class ParameterEstimator(RasterShape):
         if self.gdf_query == None:
             geom = self.gdf.ix[0].geometry
         else:
-            geom = gdf.query(self.gdf_query).ix[0].geometry
+            geom = self.gdf.query(self.gdf_query).iloc[0].geometry
         return geom
 
     def deep_water_means(self, p=10, win_size=3, win_percentage=50):
@@ -288,12 +288,12 @@ def geometric_factor_from_imd(imd_path):
 
 def jerlov_Kd_plot(paramdf, columns='K', jerlov_legend=True,
                     figure_title="$K$ Estimates and $K_d$ Values from Jerlov",
-                    legend_loc='best'):
+                    legend_loc='best', figsize=(8,6)):
     from matplotlib.cm import summer_r
     # from matplotlib import style
     # style.use('ggplot')
     jerlov_df = jerlov_Kd()
-    fig, ax = subplots(1,1, figsize=(8,6))
+    fig, ax = subplots(1,1, figsize=figsize)
 
     if paramdf is not None:
         ax = paramdf[columns].plot(ax=ax, marker='o')

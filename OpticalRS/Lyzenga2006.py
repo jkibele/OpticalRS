@@ -555,3 +555,43 @@ def glint_correct_image(imarr, glintarr, nir_band=7):
         outarr[:,:,band] = imarr[:,:,band] - cov_rats[i] * ( imarr[:,:,nir_band] - nirm )
     # this will leave the NIR band unchanged
     return outarr
+
+def glint_correct_wv2(imrds, glintgeom):
+    """
+    This is a special case of the sunglint method for WorldView-2 imagery. The
+    WV2 multispectral bands are divided into two groups, MS1 and MS2. The two
+    groups are captured at slightly different times. This means that not all the
+    visible bands covary with both NIR bands. This method splits the WV2 bands
+    and applies the Lyzenga glint correction method to MS1 and MS2 groups
+    separately, and then reassbles the results.
+
+    Parameters
+    ----------
+    imrds : OpticalRS.RasterDS
+        The raster dataset for the WV2 image that you'd like to correct.
+    glintgeom : shapely geometry
+        A polygon from within `imrds` that defines an area of optically deep
+        water with sun glint.
+
+    Returns
+    -------
+    barr : numpy image array
+        A version of `imrds` with sun glint removal applied.
+    """
+    ms1_bands = [1,2,4,6]
+    ms2_bands = [0,3,5,7]
+    barr = imrds.band_array
+    garr = imrds.geometry_subset(glintgeom)
+
+    barr1 = barr[...,ms1_bands]
+    garr1 = garr[...,ms1_bands]
+
+    barr2 = barr[...,ms2_bands]
+    garr2 = garr[...,ms2_bands]
+
+    sg1 = glint_correct_image(barr1, garr1, 3)
+    sg2 = glint_correct_image(barr2, garr2, 3)
+
+    barr[...,ms1_bands] = sg1
+    barr[...,ms2_bands] = sg2
+    return barr
