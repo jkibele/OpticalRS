@@ -13,7 +13,7 @@ import re
 #     for line in f:
 #         if line.startswith('__version__'):
 #             optrs_version = '.'.join( re.findall(r'\d+', line) )
-optrs_version = '1.0.2'
+optrs_version = '1.0.3'
 
 try:
     from setuptools import setup, find_packages
