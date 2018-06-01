@@ -88,14 +88,14 @@ class RasterShape(object):
         df = self.gdf
         df[rast_col] = self.point_sample()
         fig,ax = plt.subplots(1,1)
-        mapa = ax.hexbin(df[rast_col],df[point_col],mincnt=1,bins=None,gridsize=500,\
+        mapa = ax.hexbin(df[point_col],df[rast_col],mincnt=1,bins=None,gridsize=500,\
                              cmap=plt.cm.jet)
-        ax.set_ylabel(point_col)
-        ax.set_xlabel(rast_col)
+        ax.set_xlabel(point_col)
+        ax.set_ylabel(rast_col)
         ax.set_aspect('equal')
         dmin = df[point_col].min()
         dmax = df[point_col].max()
-        ax.plot([dmin,dmax],[dmin,dmax],c='white',alpha=0.6)
+        ax.plot([dmin,dmax],[dmin,dmax],c='black',alpha=0.6)
         ax.set_title(r"RMSE: {:.2f}, $R^2$: {:.2f}".format(self.rmse(rast_col,point_col),\
                                                         self.rsquared(rast_col,point_col)))
         return fig
