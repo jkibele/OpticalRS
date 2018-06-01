@@ -22,4 +22,4 @@ from ErrorMatrix import ErrorMatrix
 
 __author__ = 'Jared Kibele'
 __email__ = 'jkibele@gmail.com'
-__version__ = '1.0.3'
+__version__ = '1.0.4'

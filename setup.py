@@ -13,7 +13,7 @@ import re
 #     for line in f:
 #         if line.startswith('__version__'):
 #             optrs_version = '.'.join( re.findall(r'\d+', line) )
-optrs_version = '1.0.3'
+optrs_version = '1.0.4'
 
 try:
     from setuptools import setup, find_packages
@@ -34,7 +34,7 @@ requirements = ['numpy',
                 'scikit-learn',
                 'GDAL',
                 'geopandas',
-                'rasterstats',
+                'rasterstats==0.5',
                 'scipy']
 
 #test_requirements = [
