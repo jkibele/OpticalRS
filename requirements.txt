@@ -7,6 +7,7 @@ matplotlib==2.0.2
 
 # OpticalRS uses rasterstats.utils.bbox_to_pixel_offsets which is dropped in rasterstats 0.9.0 
 rasterstats==0.5 
-scikit-image==0.13.0 
+scikit-image==0.13.0
+scikit-learn==0.19.2
 GDAL==2.2.1
 scipy==0.19.1
