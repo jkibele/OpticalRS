@@ -1,5 +1,5 @@
 wheel==0.29.0
-numpy==1.13.1
+numpy==1.21.0
 statsmodels==0.8.0 
 pandas==0.20.3 
 geopandas==0.3.0 
