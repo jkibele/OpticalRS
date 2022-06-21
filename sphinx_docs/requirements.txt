@@ -2,7 +2,7 @@
 # I can't get the project to build on RTD right now so I'm giving up. I'll 
 # leave this file in case I want to try again some day.
 wheel==0.23.0
-numpy==1.9.2
+numpy==1.22.0
 pandas==0.16.2
 statsmodels==0.6.1
 
