@@ -31,6 +31,7 @@ htmlcov
 *.mo
 
 # Mr Developer
+.idea/*
 .mr.developer.cfg
 .project
 .pydevproject
