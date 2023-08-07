@@ -320,8 +320,8 @@ def toa_radiance(bandarr,absCal,effBand):
     The formula is from Radiometric Use of WorldView-2 Imagery (see references.txt)
 
     >>> toa_radiance(np.array([[1,2,3,4],[5,6,7,8]]),4,2)
-    array([[ 2,  4,  6,  8],
-           [10, 12, 14, 16]])
+    array([[ 2.,  4.,  6.,  8.],
+           [10., 12., 14., 16.]])
     """
     outarr = (absCal * bandarr) / effBand
     return outarr
@@ -367,7 +367,14 @@ def toa_reflectance_multiband(bandarr,xmlorimagepath):
     solarZenith = solarZenithAngle(xmlroot)
     # loop through the bands
     for band in range( len(bandarr) ):
-        toa_arr = toa_reflectance(bandarr[band],abfd.values()[band],ebd.values()[band],Esun_od.values()[band],distES,solarZenith)
+        toa_arr = toa_reflectance(
+            bandarr[band],
+            list(abfd.values())[band],
+            list(ebd.values())[band],
+            list(Esun_od.values())[band],
+            distES,
+            solarZenith
+        )
         if band==0:
             toabandarr = np.array([toa_arr])
         else:
@@ -436,7 +443,7 @@ if __name__ == '__main__':
         import doctest
         doctest.testmod()
         if not args.doctest:
-            print("This module just got tested. If that was not what you were aiming for run with '-h' for help.")
+            print("This module just got tested (ran the docstring tests). If that was not what you were aiming for run with '-h' for help.")
         sys.exit(1)
 
     if not args.outfile:

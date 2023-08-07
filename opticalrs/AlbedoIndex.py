@@ -40,7 +40,7 @@ import pandas as pd
 from scipy.optimize import curve_fit
 from pylab import subplots
 from matplotlib.pyplot import tight_layout
-from Const import wv2_center_wavelength, jerlov_Kd
+from opticalrs.Const import wv2_center_wavelength, jerlov_Kd
 
 
 def myR0(z,Rinf,Ad,Kg):

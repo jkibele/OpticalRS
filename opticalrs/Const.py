@@ -51,3 +51,12 @@ B_Rd = dict(zip(wv2_center_wavelength,[0.075,0.055,0.015,0.01,0.005,0.001]))
 LI_Kd = dict(zip(wv2_center_wavelength,[0.79,0.54,0.42,0.5,0.7,0.8]))
 # Kd values from Werdell and Roesler 2003 figure 2B
 B_Kd = dict(zip(wv2_center_wavelength,[0.1,0.06,0.1,0.25,0.4,0.45]))
+
+temperate_df = pd.DataFrame(
+    dict(
+        A=sand_albedo.values(),
+        Kd=LI_Kd.values(),
+        Rinf=LI_Rd.values()
+    ),
+    index=wv2_center_wavelength[:6]
+)
