@@ -6,13 +6,13 @@ AlbedoIndex
 Code for generating a water column corrected image from multispectral imagery.
 This is a method of water column correction for habitat mapping. It is based on
 Maritorena et al. 1994 and is described in detail in Chapters 4 and 5 of my PhD
-thesis (Kibele, In Review).
+thesis (Kibele, 2017).
 
 References
 ----------
 
-Kibele, J. (In Review). Submerged habitats from space: Increasing map production
-capacity with new methods and software. University of Auckland. PhD Thesis
+Kibele, J. (2017). Submerged habitats from space: Increasing map production
+capacity with new methods and software. [PhD Thesis]. University of Auckland.
 
 Maritorena, S., Morel, A., Gentili, B., 1994. Diffuse Reflectance of Oceanic
 Shallow Waters: Influence of Water Depth and Bottom Albedo. Limnology and
