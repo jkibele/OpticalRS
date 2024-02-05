@@ -71,7 +71,6 @@ networkx==2.8.3
 notebook==6.4.12
 notebook-shim==0.1.0
 numpy==1.22.4
-opticalrs==1.0.0
 packaging==21.3
 pandas==1.4.2
 pandocfilters==1.5.0
