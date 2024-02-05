@@ -202,7 +202,6 @@ nss=3.89=he45b914_0
 numpy=1.22.4=py38h99721a1_0
 openjpeg=2.5.0=hfec8fc6_2
 openssl=3.1.1=hd590300_1
-opticalrs=1.0.0=dev_0
 packaging=21.3=pyhd8ed1ab_0
 pandas=1.4.2=py38h47df419_2
 pandoc=2.18=ha770c72_0
